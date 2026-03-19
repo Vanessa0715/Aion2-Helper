@@ -124,6 +124,7 @@
             box-shadow: 0 0 10px rgba(255, 183, 197, 0.4);
         }
 
+        /* 專屬下拉選單滾動條美化 */
         #customDropdownList::-webkit-scrollbar { width: 6px; }
         #customDropdownList::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 8px; }
         #customDropdownList::-webkit-scrollbar-thumb { background: rgba(255,183,197,0.3); border-radius: 8px; }
@@ -174,7 +175,6 @@
                     </div>
                 </div>
                 <div class="space-y-6">
-                    <!-- 手機版自動上下疊排，電腦版左右並排 -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="text-sm uppercase font-bold opacity-60 mb-2 block text-pink-100 tracking-wider">聖域副本</label>
@@ -191,7 +191,6 @@
                             <button id="modeNo" onclick="window.switchFillMode('no')" class="flex-1 py-3.5 rounded-2xl text-sm font-bold transition-all bg-white/5 text-white opacity-60 hover:opacity-100 hover:bg-white/10 border border-white/5">🔴 只填我不行</button>
                         </div>
                         
-                        <!-- 移除了 max-h 和 overflow-y-auto，解決手機卡在選單滑不下去的問題 -->
                         <div id="timeCheckboxes" class="grid grid-cols-1 gap-2.5 pb-4"></div>
                         
                         <button id="submitBtn" onclick="window.submitRaidVotes()" class="btn-shasha w-full mt-4 flex items-center justify-center gap-2 tracking-widest">
@@ -214,21 +213,24 @@
             <div class="glass-card p-6 md:p-8">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-6">
                     <h3 class="text-2xl font-bold text-pink-300 flex items-center gap-2"><span>📊</span> 報名總覽</h3>
-                    <!-- 總覽的切換按鈕同樣優化版面 -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:w-auto md:flex">
-                         <div class="raid-switch w-full md:w-36" id="heatmapRaidSwitch"></div>
+                         <div class="raid-switch w-full md:w-44" id="heatmapRaidSwitch"></div>
                          <div class="week-nav w-full md:w-72" id="heatmapWeekNav"></div>
                     </div>
                 </div>
-                <div class="overflow-x-auto rounded-2xl border border-white/10 shadow-inner">
-                    <table class="w-full text-center border-collapse">
+                <!-- 調整 overflow 以支援 sticky -->
+                <div class="overflow-x-auto rounded-2xl border border-white/10 shadow-inner max-w-full">
+                    <table class="w-full text-center border-collapse min-w-max relative">
                         <thead><tr id="tableHeader"></tr></thead>
                         <tbody id="statsTableBody"></tbody>
                     </table>
                 </div>
                 <div class="mt-10 space-y-8 text-white">
                     <div>
-                        <h4 class="font-bold text-base mb-4 border-b border-white/10 pb-3 text-pink-200">本週已填寫 (<span id="playerCount">0</span>)</h4>
+                        <h4 class="font-bold text-base mb-4 border-b border-white/10 pb-3 text-pink-200 flex items-end">
+                            本週已填寫 (<span id="playerCount">0</span>)
+                            <span class="text-[10px] opacity-50 ml-2 font-normal tracking-wide">(點擊小名牌可查看個人時間)</span>
+                        </h4>
                         <div id="playerList" class="flex flex-wrap gap-2.5"></div>
                     </div>
                     <div>
@@ -444,6 +446,9 @@
         let currentActiveSlot = null;
         let playerJobPresets = {};
         let mockDragCounts = JSON.parse(localStorage.getItem('shasha_mock_drag_counts') || '{}');
+        
+        // 紗紗專屬：追蹤目前被選取要篩選的玩家
+        let heatmapFilterPlayer = null;
 
         const dayNames = ['三', '四', '五', '六', '日', '一', '二'];
         const slots = ['20:00', '21:00', '22:00', '23:00'];
@@ -487,8 +492,8 @@
             if (diffWeeks === 0) relLabel = `<span class="week-label-today">本週</span>`;
             else if (diffWeeks === 1) relLabel = ` <span class="opacity-60 text-xs ml-2">下週</span>`;
             else if (diffWeeks === -1) relLabel = ` <span class="opacity-60 text-xs ml-2">上週</span>`;
-            const raidHtml = `<div class="raid-btn ${currentRaid==='old'?'active-old':'text-white/50 hover:bg-white/10'}" onclick="window.switchRaid('old')">舊</div>
-                              <div class="raid-btn ${currentRaid==='new'?'active-new':'text-white/50 hover:bg-white/10'}" onclick="window.switchRaid('new')">新</div>`;
+            const raidHtml = `<div class="raid-btn ${currentRaid==='old'?'active-old':'text-white/50 hover:bg-white/10'}" onclick="window.switchRaid('old')">舊聖域</div>
+                              <div class="raid-btn ${currentRaid==='new'?'active-new':'text-white/50 hover:bg-white/10'}" onclick="window.switchRaid('new')">新聖域</div>`;
             const weekHtml = `<div class="week-btn text-white/50 hover:bg-white/10" onclick="window.changeWeek(-1)">◀</div>
                               <div class="flex-[3] text-sm flex items-center justify-center font-bold text-white tracking-wide">${rangeText}${relLabel}</div>
                               <div class="week-btn text-white/50 hover:bg-white/10" onclick="window.changeWeek(1)">▶</div>`;
@@ -496,7 +501,8 @@
             ['signupWeekNav', 'heatmapWeekNav'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = weekHtml; });
             const th = document.getElementById('tableHeader');
             if (th) {
-                th.innerHTML = `<th class="p-3 md:p-4 border-b border-white/10 opacity-60 text-sm font-medium tracking-widest text-pink-100 w-16">時段</th>` + 
+                // 幫第一欄加上 sticky 凍結效果，配合背景色避免重疊
+                th.innerHTML = `<th class="p-3 md:p-4 border-b border-white/10 opacity-80 text-sm font-bold tracking-widest text-pink-100 w-16 sticky left-0 z-20 bg-[#251541] shadow-[2px_0_5px_rgba(0,0,0,0.3)]">時段</th>` + 
                 dayNames.map((name, i) => {
                     const d = new Date(currentWedDate); d.setDate(d.getDate() + i);
                     const isWeekend = (name === '六' || name === '日');
@@ -510,42 +516,69 @@
             if (!body) return; body.innerHTML = '';
             slots.forEach((slot, sIdx) => {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td class="p-3 md:p-4 border-b border-white/5 font-bold opacity-80 text-pink-200 text-sm tracking-wide bg-black/10">${slot}</td>`;
+                // 幫第一欄內容加上 sticky 凍結效果
+                row.innerHTML = `<td class="p-3 md:p-4 border-b border-white/5 font-bold opacity-90 text-pink-200 text-sm tracking-wide sticky left-0 z-10 bg-[#1d0e33] shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${slot}</td>`;
                 dayNames.forEach((_, dIdx) => {
                     const available = allVotes.filter(v => {
                         const mode = v.fillMode || 'ok';
                         const marked = v.votes && v.votes.some(vote => vote.day === dIdx && vote.slot === sIdx);
                         return mode === 'ok' ? marked : !marked;
                     });
-                    const count = available.length;
                     
-                    // 根據人數動態賦予樣式（游標改成 pointer）
-                    let textClass = 'text-white/30';
-                    let bgClass = '';
-                    if (count > 0 && count < 4) { textClass = 'text-white/80 font-medium'; bgClass = 'bg-white/5 hover:bg-white/10'; }
-                    else if (count >= 4 && count < 7) { textClass = 'text-pink-300 font-bold text-base'; bgClass = 'bg-pink-500/20 hover:bg-pink-500/30'; }
-                    else if (count === 7) { textClass = 'text-pink-400 font-extrabold text-lg'; bgClass = 'bg-pink-500/30 shadow-[inset_0_0_15px_rgba(236,72,153,0.3)] hover:bg-pink-500/40'; }
-                    else if (count >= 8) { textClass = 'text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'; bgClass = 'slot-full hover:bg-yellow-400/30'; }
-
                     const td = document.createElement('td');
-                    td.className = `p-3 md:p-4 border-b border-white/5 transition-all cursor-pointer select-none ${bgClass}`;
-                    td.innerHTML = `<div class="${textClass}">${count}</div>`;
-                    td.onclick = () => window.openParticipantModal(dIdx, sIdx, available);
+                    
+                    if (heatmapFilterPlayer) {
+                        // 如果有啟用個人透視篩選
+                        const pVote = allVotes.find(v => v.name === heatmapFilterPlayer);
+                        let isAvail = false;
+                        if (pVote) {
+                            const mode = pVote.fillMode || 'ok';
+                            const marked = pVote.votes && pVote.votes.some(vote => vote.day === dIdx && vote.slot === sIdx);
+                            isAvail = mode === 'ok' ? marked : !marked;
+                        }
+                        if (isAvail) {
+                            td.className = `p-3 md:p-4 border-b border-white/5 transition-all bg-green-500/20`;
+                            td.innerHTML = `<div class="text-green-400 font-bold text-lg">✓</div>`;
+                        } else {
+                            td.className = `p-3 md:p-4 border-b border-white/5 transition-all bg-red-500/10`;
+                            td.innerHTML = `<div class="text-red-400 font-bold text-lg opacity-50">✗</div>`;
+                        }
+                        td.onclick = null; // 篩選模式下暫時不能點開名單彈窗
+                    } else {
+                        // 正常顯示人數模式
+                        const count = available.length;
+                        let textClass = 'text-white/30';
+                        let bgClass = '';
+                        if (count > 0 && count < 4) { textClass = 'text-white/80 font-medium'; bgClass = 'bg-white/5 hover:bg-white/10'; }
+                        else if (count >= 4 && count < 7) { textClass = 'text-pink-300 font-bold text-base'; bgClass = 'bg-pink-500/20 hover:bg-pink-500/30'; }
+                        else if (count === 7) { textClass = 'text-pink-400 font-extrabold text-lg'; bgClass = 'bg-pink-500/30 shadow-[inset_0_0_15px_rgba(236,72,153,0.3)] hover:bg-pink-500/40'; }
+                        else if (count >= 8) { textClass = 'text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'; bgClass = 'slot-full hover:bg-yellow-400/30'; }
+
+                        td.className = `p-3 md:p-4 border-b border-white/5 transition-all cursor-pointer select-none ${bgClass}`;
+                        td.innerHTML = `<div class="${textClass}">${count}</div>`;
+                        td.onclick = () => window.openParticipantModal(dIdx, sIdx, available);
+                    }
+                    
                     row.appendChild(td);
                 });
                 body.appendChild(row);
             });
         }
+        window.renderStats = renderStats;
 
         function renderPlayerList() {
             const list = document.getElementById('playerList');
             const unList = document.getElementById('unfilledPlayerList');
             if (!list || !unList) return;
             list.innerHTML = ''; unList.innerHTML = '';
+            
             allVotes.forEach(p => {
                 const icon = p.job ? p.job.split(' ')[0] : '👤';
-                list.innerHTML += `<div class="px-3.5 py-2 bg-white/5 border border-white/10 rounded-xl text-xs flex items-center gap-2 shadow-sm hover:bg-white/10 transition"><span class="opacity-70 text-sm">${icon}</span> <span class="font-bold text-white tracking-wide">${p.name}</span></div>`;
+                const isSelected = p.name === heatmapFilterPlayer;
+                const activeClass = isSelected ? 'ring-2 ring-pink-400 bg-pink-500/40 shadow-[0_0_10px_rgba(236,72,153,0.5)]' : 'bg-white/5 hover:bg-white/10';
+                list.innerHTML += `<div onclick="window.toggleHeatmapFilter('${p.name}')" class="cursor-pointer px-3.5 py-2 border border-white/10 rounded-xl text-xs flex items-center gap-2 shadow-sm transition-all ${activeClass}"><span class="opacity-70 text-sm">${icon}</span> <span class="font-bold text-white tracking-wide">${p.name}</span></div>`;
             });
+            
             const pCountLabel = document.getElementById('playerCount');
             if (pCountLabel) pCountLabel.innerText = allVotes.length;
             const unfilled = allMembers.filter(m => !allVotes.some(v => v.name === m.name));
@@ -554,6 +587,7 @@
                 unList.innerHTML += `<div class="px-3.5 py-2 bg-black/30 border border-white/5 rounded-xl text-xs flex items-center gap-2 grayscale opacity-40"><span class="opacity-70 text-sm">${icon}</span> <span class="tracking-wide">${m.name}</span></div>`;
             });
         }
+        window.renderPlayerList = renderPlayerList;
 
         function renderCheckboxes() {
             const container = document.getElementById('timeCheckboxes');
@@ -595,6 +629,11 @@
             changeWeek: (offset) => {
                 currentWedDate.setDate(currentWedDate.getDate() + (offset * 7));
                 updateSelectorsUI(); startSyncVotes();
+            },
+            toggleHeatmapFilter: (name) => {
+                heatmapFilterPlayer = heatmapFilterPlayer === name ? null : name;
+                window.renderStats();
+                window.renderPlayerList();
             },
             switchFillMode: async (mode, isSystemLoad = false) => {
                 const btnOk = document.getElementById('modeOk');
