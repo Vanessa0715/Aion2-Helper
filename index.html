@@ -65,17 +65,17 @@
         }
 
         @keyframes pulse-pink {
-            0%, 100% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.9), 0 0 0 0 rgba(236, 72, 153, 0.7); }
-            70% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.9), 0 0 0 15px rgba(236, 72, 153, 0); }
+            0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.6), inset 0 0 10px rgba(236, 72, 153, 0.3); border-color: rgba(244, 114, 182, 0.8); }
+            50% { box-shadow: 0 0 25px rgba(236, 72, 153, 1), inset 0 0 15px rgba(236, 72, 153, 0.6); border-color: rgba(253, 164, 175, 1); }
         }
         
         @keyframes pulse-cyan {
-            0%, 100% { box-shadow: 0 0 25px rgba(0, 242, 255, 0.9), 0 0 0 0 rgba(0, 242, 255, 0.7); }
-            70% { box-shadow: 0 0 25px rgba(0, 242, 255, 0.9), 0 0 0 15px rgba(0, 242, 255, 0); }
+            0%, 100% { box-shadow: 0 0 15px rgba(0, 242, 255, 0.6), inset 0 0 10px rgba(0, 242, 255, 0.3); border-color: rgba(34, 211, 238, 0.8); }
+            50% { box-shadow: 0 0 25px rgba(0, 242, 255, 1), inset 0 0 15px rgba(0, 242, 255, 0.6); border-color: rgba(103, 232, 249, 1); }
         }
         
-        .published-pulse-old { animation: pulse-pink 2s infinite; }
-        .published-pulse-new { animation: pulse-cyan 2s infinite; }
+        .published-pulse-old { animation: pulse-pink 2s ease-in-out infinite; border: 2px solid transparent; }
+        .published-pulse-new { animation: pulse-cyan 2s ease-in-out infinite; border: 2px solid transparent; }
 
         .vote-box {
             width: 36px; height: 36px; border: 1px solid var(--shasha-glow);
@@ -283,6 +283,11 @@
                     <div id="mockBatchContainer" class="col-span-2 md:col-span-3 grid grid-cols-1 gap-4 md:gap-5 h-[500px] md:h-auto overflow-y-auto md:overflow-visible pr-1 pb-4"></div>
                 </div>
             </div>
+        </div>
+
+        <!-- 浮水印 Footer -->
+        <div class="text-center text-[10px] text-white/30 mt-8 mb-8 pb-12 tracking-widest font-light pointer-events-none w-full">
+            Crafted with 💖 by Vanessa Huang
         </div>
     </div>
 
@@ -589,18 +594,17 @@
                         const count = available.length;
                         let textClass = 'text-white/30';
                         let bgClass = '';
-                        if (count > 0 && count < 4) { textClass = 'text-white/80 font-medium'; bgClass = 'bg-white/5 hover:bg-white/10'; }
-                        else if (count >= 4 && count < 7) { textClass = isNewRaid ? 'text-cyan-300 font-bold text-base' : 'text-pink-300 font-bold text-base'; bgClass = isNewRaid ? 'bg-cyan-500/20 hover:bg-cyan-500/30' : 'bg-pink-500/20 hover:bg-pink-500/30'; }
+                        if (count > 0 && count < 6) { textClass = 'text-white/80 font-medium'; bgClass = 'bg-white/5 hover:bg-white/10'; }
+                        else if (count === 6) { textClass = isNewRaid ? 'text-cyan-300 font-bold text-base' : 'text-pink-300 font-bold text-base'; bgClass = isNewRaid ? 'bg-cyan-500/20 hover:bg-cyan-500/30' : 'bg-pink-500/20 hover:bg-pink-500/30'; }
                         else if (count === 7) { textClass = isNewRaid ? 'text-cyan-400 font-extrabold text-lg' : 'text-pink-400 font-extrabold text-lg'; bgClass = isNewRaid ? 'bg-cyan-500/30 shadow-[inset_0_0_15px_rgba(0,242,255,0.3)] hover:bg-cyan-500/40' : 'bg-pink-500/30 shadow-[inset_0_0_15px_rgba(236,72,153,0.3)] hover:bg-pink-500/40'; }
                         else if (count >= 8) { textClass = 'text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'; bgClass = 'slot-full hover:bg-yellow-400/30'; }
 
                         if (isPublishedSlot) {
-                            const ringColor = isNewRaid ? 'ring-4 ring-cyan-400 border-2 border-cyan-200' : 'ring-4 ring-pink-400 border-2 border-pink-200';
                             const bgColor = isNewRaid ? 'bg-cyan-500/40 hover:bg-cyan-500/50' : 'bg-pink-500/40 hover:bg-pink-500/50';
                             const txtColor = isNewRaid ? 'text-cyan-50 drop-shadow-[0_0_8px_rgba(0,242,255,1)]' : 'text-pink-50 drop-shadow-[0_0_8px_rgba(236,72,153,1)]';
                             const pulseClass = isNewRaid ? 'published-pulse-new' : 'published-pulse-old';
 
-                            bgClass = `${bgColor} ${ringColor} z-20 relative outline outline-2 outline-offset-2 ${isNewRaid ? 'outline-cyan-500' : 'outline-pink-500'} ${pulseClass}`;
+                            bgClass = `${bgColor} z-20 relative ${pulseClass}`;
                             textClass = `${txtColor} font-black text-xl md:text-2xl`;
                         }
 
@@ -1143,7 +1147,7 @@
             nameInputEl.addEventListener('click', (e) => { e.stopPropagation(); const list = document.getElementById('customDropdownList'); if(!list) return; Array.from(list.children).forEach(child => child.style.display = 'flex'); list.classList.remove('hidden'); });
             nameInputEl.addEventListener('input', (e) => {
                 const val = e.target.value.trim().toLowerCase(); const list = document.getElementById('customDropdownList');
-                if(list) { list.classList.remove('hidden'); Array.from(list.children).forEach(child => { const childText = child.querySelector('span').innerText.toLowerCase(); if (childText.includes(val)) child.style.display = 'flex'; else child.style.display = 'none'; }); }
+                if(list) { list.classList.remove('hidden'); Array.from(list.children).forEach(child => { const childText = child.innerText.toLowerCase(); if (childText.includes(val)) child.style.display = 'flex'; else child.style.display = 'none'; }); }
                 const notice = document.getElementById('autoJobNotice'); const rawVal = e.target.value.trim();
                 if (playerJobPresets[rawVal]) { if (notice) notice.innerText = `✨ 已辨識：${playerJobPresets[rawVal]}`; localStorage.setItem('shasha_raid_player_name', rawVal); loadMyCurrentRecord(); }
                 else { if (notice) notice.innerText = ''; document.getElementById('timeLock').classList.remove('hidden'); }
