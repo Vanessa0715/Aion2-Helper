@@ -101,7 +101,7 @@
         .draggable-member { cursor: grab; user-select: none; }
         .draggable-member:active { cursor: grabbing; }
 
-        .modal-overlay { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); }
+        .modal-overlay { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 1000; }
 
         .raid-switch, .week-nav {
             display: flex; background: rgba(255, 255, 255, 0.05);
@@ -124,7 +124,6 @@
             box-shadow: 0 0 10px rgba(255, 183, 197, 0.4);
         }
 
-        /* 專屬下拉選單滾動條美化 */
         #customDropdownList::-webkit-scrollbar { width: 6px; }
         #customDropdownList::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 8px; }
         #customDropdownList::-webkit-scrollbar-thumb { background: rgba(255,183,197,0.3); border-radius: 8px; }
@@ -203,13 +202,6 @@
 
         <!-- Tab 2: Heatmap (報名總覽) -->
         <div id="tab-heatmap" class="tab-pane hidden space-y-6">
-            <div id="publishedRaidSection" class="glass-card p-6 md:p-8 shadow-[0_0_20px_rgba(255,183,197,0.15)] hidden border-pink-400/50 border-2 relative overflow-hidden bg-gradient-to-br from-[#2d1b4d] to-[#1a0b2e]">
-                 <div class="absolute top-0 left-0 bg-pink-500 text-white text-xs font-bold px-4 py-1.5 rounded-br-xl tracking-widest shadow-md">⭐ 開戰公告</div>
-                 <h3 id="publishedRaidTitle" class="text-xl font-bold text-pink-200 mt-6 mb-6 text-center flex items-center justify-center gap-2"></h3>
-                 <div id="publishedRaidBatches" class="space-y-5 text-white"></div>
-                 <div id="publishedRaidFooter" class="text-xs text-right opacity-40 text-pink-200 mt-5"></div>
-            </div>
-
             <div class="glass-card p-6 md:p-8">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-6">
                     <h3 class="text-2xl font-bold text-pink-300 flex items-center gap-2"><span>📊</span> 報名總覽</h3>
@@ -218,14 +210,27 @@
                          <div class="week-nav w-full md:w-72" id="heatmapWeekNav"></div>
                     </div>
                 </div>
-                <!-- 調整 overflow 以支援 sticky -->
+                
                 <div class="overflow-x-auto rounded-2xl border border-white/10 shadow-inner max-w-full">
                     <table class="w-full text-center border-collapse min-w-max relative">
                         <thead><tr id="tableHeader"></tr></thead>
                         <tbody id="statsTableBody"></tbody>
                     </table>
                 </div>
-                <div class="mt-10 space-y-8 text-white">
+
+                <!-- ✨ 公告精簡版塊 (自動跟隨週期切換) -->
+                <div class="mt-6 bg-black/20 border border-pink-500/20 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-pink-500"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="bg-pink-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md tracking-widest flex-shrink-0">⭐ 開戰公告</div>
+                        <div id="publishedRaidStatus" class="text-sm"></div>
+                    </div>
+                    <button id="publishedRaidViewBtn" onclick="window.openPublishedRaidModal()" class="hidden text-xs bg-pink-500/20 px-4 py-2.5 rounded-xl border border-pink-400/30 hover:bg-pink-500/40 text-pink-200 transition-all font-bold flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                        <i data-lucide="eye" class="w-4 h-4"></i> 查看分隊名單
+                    </button>
+                </div>
+
+                <div class="mt-8 space-y-8 text-white">
                     <div>
                         <h4 id="playerListHeader" class="font-bold text-base mb-4 border-b border-white/10 pb-3 text-pink-200 flex items-center flex-wrap gap-2">
                             本週已填寫 (<span id="playerCount">0</span>)
@@ -281,7 +286,7 @@
     </nav>
 
     <!-- Modals -->
-    <div id="memberEditorModal" class="fixed inset-0 modal-overlay hidden z-[110] flex items-center justify-center p-4">
+    <div id="memberEditorModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-lg p-6 md:p-8 space-y-5 overflow-y-auto max-h-[85vh]">
             <div class="flex justify-between items-center border-b border-white/10 pb-5">
                 <h3 class="text-xl font-bold text-blue-300">成員名單管理</h3>
@@ -303,7 +308,7 @@
         </div>
     </div>
 
-    <div id="participantModal" class="fixed inset-0 modal-overlay hidden z-[100] flex items-center justify-center p-4 text-white">
+    <div id="participantModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 text-white">
         <div class="glass-card w-full max-w-4xl p-6 md:p-8 space-y-6 overflow-y-auto max-h-[90vh]">
             <div class="flex flex-col md:flex-row md:justify-between items-start border-b border-white/10 pb-5 gap-4">
                 <div>
@@ -312,7 +317,7 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5 justify-start md:justify-end">
                     <button id="copyTeamBtn" onclick="window.copyToClipboard()" class="text-xs bg-green-500/20 px-4 py-2 rounded-xl border border-green-400/20 hover:bg-green-500/30 text-green-300 flex items-center gap-1.5 font-bold">
-                        <i data-lucide="copy" class="w-4 h-4"></i> 複製分隊名單
+                        <i data-lucide="copy" class="w-4 h-4"></i> 複製名單
                     </button>
                     <button id="editModeBtn" onclick="window.toggleEditMode()" class="text-xs bg-pink-500/20 px-4 py-2 rounded-xl border border-pink-400/20 hover:bg-pink-500/30 text-pink-300 flex items-center gap-1.5 font-bold">
                         <i data-lucide="lock" id="editIcon" class="w-4 h-4"></i> 編輯模式
@@ -338,6 +343,18 @@
                 <div id="modalBatchContainer" class="col-span-2 md:col-span-3 grid grid-cols-1 gap-4 md:gap-5 h-[450px] md:h-auto overflow-y-auto md:overflow-visible pr-1 pb-4"></div>
             </div>
             <div id="lastEditInfo" class="text-xs text-right opacity-50 text-pink-200 tracking-wide mt-2"></div>
+        </div>
+    </div>
+
+    <!-- ✨ 查看開戰公告彈窗 -->
+    <div id="publishedRaidModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 text-white">
+        <div class="glass-card w-full max-w-2xl p-6 md:p-8 space-y-6 overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-start border-b border-white/10 pb-5 gap-4">
+                <h3 id="pubModalTitle" class="text-xl font-bold text-pink-300 flex items-center gap-2"></h3>
+                <button onclick="window.closePublishedRaidModal()" class="text-white opacity-50 p-2 bg-white/5 rounded-full hover:bg-white/10 transition">✕</button>
+            </div>
+            <div id="pubModalBatches" class="space-y-5 text-white"></div>
+            <div id="pubModalFooter" class="text-xs text-right opacity-40 text-pink-200 mt-5"></div>
         </div>
     </div>
 
@@ -437,6 +454,8 @@
         let allVotes = [];
         let allMembers = [];
         let unsubscribeVotes = null;
+        let unsubscribePublishedRaid = null;
+        let currentPublishedRaidData = null;
         let currentRaid = 'old';
         let currentFillMode = 'ok';
         let mySelectedVotes = {};
@@ -447,7 +466,6 @@
         let playerJobPresets = {};
         let mockDragCounts = JSON.parse(localStorage.getItem('shasha_mock_drag_counts') || '{}');
         
-        // 紗紗專屬：追蹤目前被選取要篩選的玩家
         let heatmapFilterPlayer = null;
 
         const dayNames = ['三', '四', '五', '六', '日', '一', '二'];
@@ -501,7 +519,6 @@
             ['signupWeekNav', 'heatmapWeekNav'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = weekHtml; });
             const th = document.getElementById('tableHeader');
             if (th) {
-                // 幫第一欄加上 sticky 凍結效果，配合背景色避免重疊
                 th.innerHTML = `<th class="p-3 md:p-4 border-b border-white/10 opacity-80 text-sm font-bold tracking-widest text-pink-100 w-16 sticky left-0 z-20 bg-[#251541] shadow-[2px_0_5px_rgba(0,0,0,0.3)]">時段</th>` + 
                 dayNames.map((name, i) => {
                     const d = new Date(currentWedDate); d.setDate(d.getDate() + i);
@@ -516,7 +533,6 @@
             if (!body) return; body.innerHTML = '';
             slots.forEach((slot, sIdx) => {
                 const row = document.createElement('tr');
-                // 幫第一欄內容加上 sticky 凍結效果
                 row.innerHTML = `<td class="p-3 md:p-4 border-b border-white/5 font-bold opacity-90 text-pink-200 text-sm tracking-wide sticky left-0 z-10 bg-[#1d0e33] shadow-[2px_0_5px_rgba(0,0,0,0.3)]">${slot}</td>`;
                 dayNames.forEach((_, dIdx) => {
                     const available = allVotes.filter(v => {
@@ -528,7 +544,6 @@
                     const td = document.createElement('td');
                     
                     if (heatmapFilterPlayer) {
-                        // 如果有啟用個人透視篩選
                         const pVote = allVotes.find(v => v.name === heatmapFilterPlayer);
                         let isAvail = false;
                         if (pVote) {
@@ -543,9 +558,8 @@
                             td.className = `p-3 md:p-4 border-b border-white/5 transition-all bg-red-500/10`;
                             td.innerHTML = `<div class="text-red-400 font-bold text-lg opacity-50">✗</div>`;
                         }
-                        td.onclick = null; // 篩選模式下暫時不能點開名單彈窗
+                        td.onclick = null;
                     } else {
-                        // 正常顯示人數模式
                         const count = available.length;
                         let textClass = 'text-white/30';
                         let bgClass = '';
@@ -558,7 +572,6 @@
                         td.innerHTML = `<div class="${textClass}">${count}</div>`;
                         td.onclick = () => window.openParticipantModal(dIdx, sIdx, available);
                     }
-                    
                     row.appendChild(td);
                 });
                 body.appendChild(row);
@@ -769,10 +782,35 @@
                     }
                     const lastEditor = document.getElementById('playerName').value || "幹部";
                     const activeSlotText = document.getElementById('modalSlotTime').innerText; 
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'published_raid', 'latest'), { batches, publisher: lastEditor, updatedAt: Date.now(), slotText: activeSlotText.replace(' 參戰名單', '') });
+                    const weekId = getWeekId(currentWedDate);
+                    const publishId = `${currentRaid}_${weekId}`;
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'published_raid', publishId), { batches, publisher: lastEditor, updatedAt: Date.now(), slotText: activeSlotText.replace(' 參戰名單', '') });
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_layouts', currentActiveSlot), { batches, lastEditor, updatedAt: Date.now() });
                     await SysModal.alert("公告已成功發布！所有人都能在「報名總覽」看到囉 💖", "發布成功");
                 } catch(e) { await SysModal.alert("發布失敗", "錯誤"); }
+            },
+            openPublishedRaidModal: () => {
+                if(!currentPublishedRaidData) return;
+                const modal = document.getElementById('publishedRaidModal');
+                const title = document.getElementById('pubModalTitle');
+                const container = document.getElementById('pubModalBatches');
+                const footer = document.getElementById('pubModalFooter');
+
+                title.innerHTML = `<span>⚔️</span> 最終成團名單：${currentPublishedRaidData.slotText}`;
+                container.innerHTML = '';
+                const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
+
+                currentPublishedRaidData.batches.forEach((b, idx) => {
+                    const t1Html = b.t1.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">${abbrev(m.job)}</span></span>`; }).join('');
+                    const t2Html = b.t2.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">${abbrev(m.job)}</span></span>`; }).join('');
+                    container.innerHTML += `<div class="bg-black/30 p-5 rounded-2xl border border-white/5 shadow-inner"><div class="text-sm font-bold text-pink-300 mb-4 text-center border-b border-white/5 pb-3 tracking-widest">第 ${idx + 1} 梯次</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div class="bg-white/5 rounded-xl p-3"><div class="text-[10px] opacity-60 mb-2.5 text-center text-pink-100 font-bold tracking-widest uppercase">1 隊</div><div class="min-h-[50px] flex flex-wrap content-start justify-center sm:justify-start">${t1Html}</div></div><div class="bg-white/5 rounded-xl p-3"><div class="text-[10px] opacity-60 mb-2.5 text-center text-pink-100 font-bold tracking-widest uppercase">2 隊</div><div class="min-h-[50px] flex flex-wrap content-start justify-center sm:justify-start">${t2Html}</div></div></div></div>`;
+                });
+                const d = new Date(currentPublishedRaidData.updatedAt);
+                footer.innerText = `發布者: ${currentPublishedRaidData.publisher} (${d.toLocaleString()})`;
+                modal.classList.remove('hidden');
+            },
+            closePublishedRaidModal: () => {
+                document.getElementById('publishedRaidModal').classList.add('hidden');
             },
             copyToClipboard: () => {
                 let text = ""; 
@@ -893,9 +931,26 @@
 
         function startSyncVotes() {
             if (unsubscribeVotes) unsubscribeVotes();
+            if (unsubscribePublishedRaid) unsubscribePublishedRaid();
+
             const weekId = getWeekId(currentWedDate);
             unsubscribeVotes = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', `raid_votes_${currentRaid}_${weekId}`), (snapshot) => {
                 allVotes = snapshot.docs.map(doc => doc.data()); renderStats(); renderPlayerList(); loadMyCurrentRecord();
+            });
+
+            const publishId = `${currentRaid}_${weekId}`;
+            unsubscribePublishedRaid = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'published_raid', publishId), (docSnap) => {
+                const statusText = document.getElementById('publishedRaidStatus');
+                const viewBtn = document.getElementById('publishedRaidViewBtn');
+                if (docSnap.exists()) {
+                    currentPublishedRaidData = docSnap.data();
+                    statusText.innerHTML = `<span class="text-pink-300 font-bold">最終成團時間：</span><span class="text-white ml-1 font-bold tracking-wide">${currentPublishedRaidData.slotText}</span>`;
+                    if(viewBtn) viewBtn.classList.remove('hidden');
+                } else {
+                    currentPublishedRaidData = null;
+                    statusText.innerHTML = `<span class="text-white/50 text-sm tracking-wide">本週期尚未進行分隊</span>`;
+                    if(viewBtn) viewBtn.classList.add('hidden');
+                }
             });
         }
 
@@ -914,7 +969,6 @@
                 if (window.switchFillMode) window.switchFillMode(currentFillMode, true);
                 renderCheckboxes();
                 
-                // ✨ 紗紗專屬：自動滑動到報名區塊
                 setTimeout(() => {
                     const settingsDiv = document.getElementById('signupSettings');
                     if(settingsDiv && window.innerWidth < 768) {
@@ -936,24 +990,6 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         currentUser = user; startSyncVotes();
-                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'published_raid', 'latest'), (docSnap) => {
-                            const section = document.getElementById('publishedRaidSection');
-                            const title = document.getElementById('publishedRaidTitle');
-                            const container = document.getElementById('publishedRaidBatches');
-                            if (docSnap.exists()) {
-                                const data = docSnap.data();
-                                title.innerHTML = `<span class="text-2xl">⚔️</span> 最終成團名單：${data.slotText}`;
-                                container.innerHTML = '';
-                                const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
-                                data.batches.forEach((b, idx) => {
-                                    const t1Html = b.t1.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">${abbrev(m.job)}</span></span>`; }).join('');
-                                    const t2Html = b.t2.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">${abbrev(m.job)}</span></span>`; }).join('');
-                                    container.innerHTML += `<div class="bg-black/30 p-5 rounded-2xl border border-white/5 shadow-inner"><div class="text-sm font-bold text-pink-300 mb-4 text-center border-b border-white/5 pb-3 tracking-widest">第 ${idx + 1} 梯次</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div class="bg-white/5 rounded-xl p-3"><div class="text-[10px] opacity-60 mb-2.5 text-center text-pink-100 font-bold tracking-widest uppercase">1 隊</div><div class="min-h-[50px] flex flex-wrap content-start justify-center sm:justify-start">${t1Html}</div></div><div class="bg-white/5 rounded-xl p-3"><div class="text-[10px] opacity-60 mb-2.5 text-center text-pink-100 font-bold tracking-widest uppercase">2 隊</div><div class="min-h-[50px] flex flex-wrap content-start justify-center sm:justify-start">${t2Html}</div></div></div></div>`;
-                                });
-                                const d = new Date(data.updatedAt); document.getElementById('publishedRaidFooter').innerText = `發布者: ${data.publisher} (${d.toLocaleString()})`;
-                                section.classList.remove('hidden');
-                            } else { section.classList.add('hidden'); }
-                        });
                         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'raid_members'), (snap) => {
                             allMembers = snap.docs.map(d => d.data());
                             if (allMembers.length === 0) {
