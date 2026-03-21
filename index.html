@@ -64,18 +64,57 @@
             cursor: pointer;
         }
 
+        /* 💡 極致霓虹光暈特效 - 舊聖域 (粉紅) */
         @keyframes pulse-pink {
-            0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.6), inset 0 0 10px rgba(236, 72, 153, 0.3); border-color: rgba(244, 114, 182, 0.8); }
-            50% { box-shadow: 0 0 25px rgba(236, 72, 153, 1), inset 0 0 15px rgba(236, 72, 153, 0.6); border-color: rgba(253, 164, 175, 1); }
+            0%, 100% { 
+                box-shadow: 
+                    0 0 10px 2px rgba(244, 114, 182, 0.8), 
+                    0 0 20px 5px rgba(236, 72, 153, 0.4), 
+                    inset 0 0 15px rgba(244, 114, 182, 0.4); 
+                outline: 2px solid rgba(255, 183, 197, 0.8);
+                outline-offset: 1px;
+            }
+            50% { 
+                /* 純白核心 + 三重粉色擴散光暈 */
+                box-shadow: 
+                    0 0 15px 5px rgba(255, 255, 255, 0.9), 
+                    0 0 35px 12px rgba(255, 183, 197, 1), 
+                    0 0 60px 20px rgba(236, 72, 153, 0.8), 
+                    0 0 90px 30px rgba(219, 39, 119, 0.6), 
+                    inset 0 0 20px 5px rgba(255, 255, 255, 0.6), 
+                    inset 0 0 40px 15px rgba(236, 72, 153, 0.8); 
+                outline: 3px solid #fff;
+                outline-offset: 6px; 
+            }
         }
         
+        /* 💡 極致霓虹光暈特效 - 新聖域 (科技藍) */
         @keyframes pulse-cyan {
-            0%, 100% { box-shadow: 0 0 15px rgba(0, 242, 255, 0.6), inset 0 0 10px rgba(0, 242, 255, 0.3); border-color: rgba(34, 211, 238, 0.8); }
-            50% { box-shadow: 0 0 25px rgba(0, 242, 255, 1), inset 0 0 15px rgba(0, 242, 255, 0.6); border-color: rgba(103, 232, 249, 1); }
+            0%, 100% { 
+                box-shadow: 
+                    0 0 10px 2px rgba(34, 211, 238, 0.8), 
+                    0 0 20px 5px rgba(6, 182, 212, 0.4), 
+                    inset 0 0 15px rgba(34, 211, 238, 0.4); 
+                outline: 2px solid rgba(165, 243, 252, 0.8);
+                outline-offset: 1px;
+            }
+            50% { 
+                /* 純白核心 + 三重藍色擴散光暈 */
+                box-shadow: 
+                    0 0 15px 5px rgba(255, 255, 255, 0.9), 
+                    0 0 35px 12px rgba(165, 243, 252, 1), 
+                    0 0 60px 20px rgba(34, 211, 238, 0.8), 
+                    0 0 90px 30px rgba(6, 182, 212, 0.6), 
+                    inset 0 0 20px 5px rgba(255, 255, 255, 0.6), 
+                    inset 0 0 40px 15px rgba(34, 211, 238, 0.8); 
+                outline: 3px solid #fff;
+                outline-offset: 6px; 
+            }
         }
         
-        .published-pulse-old { animation: pulse-pink 2s ease-in-out infinite; border: 2px solid transparent; }
-        .published-pulse-new { animation: pulse-cyan 2s ease-in-out infinite; border: 2px solid transparent; }
+        /* 速度保持 1.2s，營造科技幻彩感 */
+        .published-pulse-old { animation: pulse-pink 1.2s ease-in-out infinite; z-index: 30 !important; }
+        .published-pulse-new { animation: pulse-cyan 1.2s ease-in-out infinite; z-index: 30 !important; }
 
         .vote-box {
             width: 36px; height: 36px; border: 1px solid var(--shasha-glow);
@@ -269,9 +308,6 @@
                         <button onclick="window.openMemberEditor()" class="text-xs bg-blue-500/20 px-4 py-2 rounded-xl border border-blue-400/20 hover:bg-blue-500/30 transition-all flex items-center gap-1.5 text-blue-200 font-bold">
                             <i data-lucide="user-cog" class="w-4 h-4"></i> 成員管理
                         </button>
-                        <button onclick="window.addMockBatch()" class="text-xs bg-white/10 px-4 py-2 rounded-xl border border-white/10 hover:bg-white/20 transition-all flex items-center gap-1.5 text-white font-bold">
-                            <i data-lucide="plus" class="w-4 h-4"></i> 新增梯次
-                        </button>
                     </div>
                 </div>
                 
@@ -280,7 +316,12 @@
                         <label class="text-[10px] md:text-xs font-bold uppercase opacity-60 block mb-2 md:mb-3 text-pink-100">成員池</label>
                         <div id="mockMemberPool" class="mock-bin h-[500px] md:h-[600px] overflow-y-auto space-y-2 p-1.5 md:p-3" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
                     </div>
-                    <div id="mockBatchContainer" class="col-span-2 md:col-span-3 grid grid-cols-1 gap-4 md:gap-5 h-[500px] md:h-auto overflow-y-auto md:overflow-visible pr-1 pb-4"></div>
+                    <div class="col-span-2 md:col-span-3 flex flex-col h-[500px] md:h-auto overflow-y-auto md:overflow-visible pr-1 pb-4">
+                        <div id="mockBatchContainer" class="grid grid-cols-1 gap-4 md:gap-5 w-full"></div>
+                        <button onclick="window.addMockBatch()" class="mt-4 md:mt-5 text-xs bg-white/5 px-4 py-4 rounded-2xl border-2 border-dashed border-white/20 hover:bg-white/10 hover:border-white/40 transition-all flex items-center justify-center gap-1.5 text-white/60 hover:text-white font-bold w-full shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 新增梯次
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -337,9 +378,6 @@
                     <button id="editModeBtn" onclick="window.toggleEditMode()" class="text-xs bg-pink-500/20 px-4 py-2 rounded-xl border border-pink-400/20 hover:bg-pink-500/30 text-pink-300 flex items-center gap-1.5 font-bold">
                         <i data-lucide="lock" id="editIcon" class="w-4 h-4"></i> 編輯模式
                     </button>
-                    <button onclick="window.addModalBatch()" id="modalAddBatchBtn" class="hidden text-xs bg-white/10 px-4 py-2 rounded-xl border border-white/10 hover:bg-white/20 transition-all text-white flex items-center gap-1.5 font-bold">
-                        <i data-lucide="plus" class="w-4 h-4"></i> 加梯次
-                    </button>
                     <button onclick="window.saveRaidLayout()" id="modalSaveBtn" class="hidden text-xs bg-blue-500 px-4 py-2 rounded-xl font-bold text-white transition-all shadow-[0_4px_10px_rgba(59,130,246,0.3)]">儲存草稿</button>
                     
                     <button onclick="window.publishRaidLayout()" id="modalPublishBtn" class="hidden text-xs bg-yellow-500 px-4 py-2 rounded-xl font-bold text-white flex items-center gap-1.5 shadow-[0_4px_10px_rgba(234,179,8,0.4)] hover:bg-yellow-400 transition-all">
@@ -355,7 +393,12 @@
                         <span class="text-[10px] md:text-xs font-bold uppercase opacity-60 block mb-2 md:mb-3 text-pink-100 tracking-wider">參與成員</span>
                         <div id="modalParticipantList" class="mock-bin space-y-2 h-[450px] md:h-[500px] overflow-y-auto p-1.5 md:p-3" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
                     </div>
-                    <div id="modalBatchContainer" class="col-span-2 md:col-span-3 grid grid-cols-1 gap-4 md:gap-5 h-[450px] md:h-auto overflow-y-auto md:overflow-visible pr-1 pb-4"></div>
+                    <div class="col-span-2 md:col-span-3 flex flex-col h-[450px] md:h-auto overflow-y-auto md:overflow-visible pr-1 pb-4">
+                        <div id="modalBatchContainer" class="grid grid-cols-1 gap-4 md:gap-5 w-full"></div>
+                        <button onclick="window.addModalBatch()" id="modalAddBatchBtn" class="hidden mt-4 md:mt-5 text-xs bg-white/5 px-4 py-4 rounded-2xl border-2 border-dashed border-white/20 hover:bg-white/10 hover:border-white/40 transition-all flex items-center justify-center gap-1.5 text-white/60 hover:text-white font-bold w-full shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 加梯次
+                        </button>
+                    </div>
                 </div>
                 <div id="lastEditInfo" class="text-xs text-right opacity-50 text-pink-200 tracking-wide mt-2"></div>
             </div>
@@ -490,7 +533,7 @@
         const slots = ['20:00', '21:00', '22:00', '23:00'];
 
         function getWeekId(date) { return date.toISOString().split('T')[0]; }
-        function formatDate(date) { return `${date.getMonth() + 1}/${date.getDate()}`; }
+        function formatDate(date) { return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`; }
         function getRecentWednesday(date) {
             const d = new Date(date);
             const day = d.getDay();
@@ -572,7 +615,9 @@
                     });
                     
                     const td = document.createElement('td');
-                    const isPublishedSlot = currentPublishedRaidData && currentPublishedRaidData.slotText === `週${dayNames[dIdx]} ${slots[sIdx]}`;
+                    
+                    // 利用 `週五` 這種字眼來比對有沒有被開戰公告選中
+                    const isPublishedSlot = currentPublishedRaidData && currentPublishedRaidData.slotText.includes(`週${dayNames[dIdx]}`) && currentPublishedRaidData.slotText.includes(`${slots[sIdx]}`);
                     
                     if (heatmapFilterPlayer) {
                         const pVote = allVotes.find(v => v.name === heatmapFilterPlayer);
@@ -600,12 +645,9 @@
                         else if (count >= 8) { textClass = 'text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'; bgClass = 'slot-full hover:bg-yellow-400/30'; }
 
                         if (isPublishedSlot) {
-                            const bgColor = isNewRaid ? 'bg-cyan-500/40 hover:bg-cyan-500/50' : 'bg-pink-500/40 hover:bg-pink-500/50';
-                            const txtColor = isNewRaid ? 'text-cyan-50 drop-shadow-[0_0_8px_rgba(0,242,255,1)]' : 'text-pink-50 drop-shadow-[0_0_8px_rgba(236,72,153,1)]';
                             const pulseClass = isNewRaid ? 'published-pulse-new' : 'published-pulse-old';
-
-                            bgClass = `${bgColor} z-20 relative ${pulseClass}`;
-                            textClass = `${txtColor} font-black text-xl md:text-2xl`;
+                            bgClass = `z-20 relative ${pulseClass}`;
+                            textClass = `text-white font-black text-xl md:text-2xl`;
                         }
 
                         td.className = `p-3 md:p-4 border-b border-white/5 transition-all cursor-pointer select-none ${bgClass}`;
@@ -905,7 +947,7 @@
                 const container = document.getElementById('pubModalBatches');
                 const footer = document.getElementById('pubModalFooter');
 
-                title.innerHTML = `<span>⚔️</span> 最終成團名單：${currentPublishedRaidData.slotText}`;
+                title.innerHTML = `<span>⚔️</span> 開打時間：${currentPublishedRaidData.slotText}`;
                 container.innerHTML = '';
                 const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
 
@@ -981,7 +1023,12 @@
                 try {
                     const modal = document.getElementById('participantModal'); const weekId = getWeekId(currentWedDate);
                     currentActiveSlot = `${currentRaid}_${weekId}_${day}_${slot}`;
-                    document.getElementById('modalSlotTime').innerText = `週${dayNames[day]} ${slots[slot]} 參戰名單`;
+                    
+                    const d = new Date(currentWedDate); d.setDate(d.getDate() + day);
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    document.getElementById('modalSlotTime').innerText = `${mm}/${dd} 週${dayNames[day]} ${slots[slot]} 參戰名單`;
+                    
                     document.getElementById('modalSlotCount').innerText = `目前統計: ${people.length} 人`;
                     const saveBtn = document.getElementById('modalSaveBtn');
                     if (saveBtn) { saveBtn.innerHTML = "儲存草稿"; if (saveBtn.classList.contains('bg-green-500')) { saveBtn.classList.replace('bg-green-500', 'bg-blue-500'); } }
@@ -1077,7 +1124,7 @@
                     currentPublishedRaidData = docSnap.data();
                     const isNewRaid = currentRaid === 'new';
                     const titleColor = isNewRaid ? 'text-cyan-300' : 'text-pink-300';
-                    statusText.innerHTML = `<span class="${titleColor} font-bold transition-colors">最終成團時間：</span><span class="text-white ml-1 font-bold tracking-wide">${currentPublishedRaidData.slotText}</span>`;
+                    statusText.innerHTML = `<span class="${titleColor} font-bold transition-colors">開打時間：</span><span class="text-white ml-1 font-bold tracking-wide">${currentPublishedRaidData.slotText}</span>`;
                     if(viewBtn) viewBtn.classList.remove('hidden');
                 } else {
                     currentPublishedRaidData = null;
