@@ -618,6 +618,22 @@
             const isNewRaid = currentRaid === 'new';
             const stickyTdClass = isNewRaid ? 'text-cyan-200 bg-[#060d1a]' : 'text-pink-200 bg-[#1d0e33]';
 
+            // 💡 智慧計算當週最高報名人數
+            let maxCount = 0;
+            const gridCounts = [];
+            slots.forEach((slot, sIdx) => {
+                gridCounts[sIdx] = [];
+                dayNames.forEach((_, dIdx) => {
+                    const count = allVotes.filter(v => {
+                        const mode = v.fillMode || 'ok';
+                        const marked = v.votes && v.votes.some(vote => vote.day === dIdx && vote.slot === sIdx);
+                        return mode === 'ok' ? marked : !marked;
+                    }).length;
+                    gridCounts[sIdx][dIdx] = count;
+                    if (count > maxCount) maxCount = count;
+                });
+            });
+
             slots.forEach((slot, sIdx) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `<td class="p-3 md:p-4 border-b border-white/5 font-bold opacity-90 ${stickyTdClass} text-sm tracking-wide sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.3)] transition-colors">${slot}</td>`;
@@ -629,9 +645,11 @@
                     });
                     
                     const td = document.createElement('td');
-                    
-                    // 利用 `週五` 這種字眼來比對有沒有被開戰公告選中
+                    const count = gridCounts[sIdx][dIdx];
                     const isPublishedSlot = currentPublishedRaidData && currentPublishedRaidData.slotText.includes(`週${dayNames[dIdx]}`) && currentPublishedRaidData.slotText.includes(`${slots[sIdx]}`);
+                    
+                    // 判斷是否為當週期最高人數 (且有人填寫)
+                    const isMax = count === maxCount && count > 0;
                     
                     if (heatmapFilterPlayer) {
                         const pVote = allVotes.find(v => v.name === heatmapFilterPlayer);
@@ -649,23 +667,54 @@
                             td.innerHTML = `<div class="text-red-400 font-bold text-lg opacity-50">✗</div>`;
                         }
                         td.onclick = null;
+                        td.style.cssText = '';
                     } else {
-                        const count = available.length;
                         let textClass = 'text-white/30';
-                        let bgClass = '';
-                        if (count > 0 && count < 6) { textClass = 'text-white/80 font-medium'; bgClass = 'bg-white/5 hover:bg-white/10'; }
-                        else if (count === 6) { textClass = isNewRaid ? 'text-cyan-300 font-bold text-base' : 'text-pink-300 font-bold text-base'; bgClass = isNewRaid ? 'bg-cyan-500/20 hover:bg-cyan-500/30' : 'bg-pink-500/20 hover:bg-pink-500/30'; }
-                        else if (count === 7) { textClass = isNewRaid ? 'text-cyan-400 font-extrabold text-lg' : 'text-pink-400 font-extrabold text-lg'; bgClass = isNewRaid ? 'bg-cyan-500/30 shadow-[inset_0_0_15px_rgba(0,242,255,0.3)] hover:bg-cyan-500/40' : 'bg-pink-500/30 shadow-[inset_0_0_15px_rgba(236,72,153,0.3)] hover:bg-pink-500/40'; }
-                        else if (count >= 8) { textClass = 'text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'; bgClass = 'slot-full hover:bg-yellow-400/30'; }
+                        let bgClass = 'bg-white/5 hover:bg-white/10'; // 預設背景
+                        let inlineStyle = '';
+
+                        // 💡 動態漸層邏輯：依照最高人數遞減背景濃度
+                        if (count > 0) {
+                            const ratio = count / maxCount;
+
+                            if (isMax) {
+                                // 🏆 只有最高人數擁有黃金外框
+                                textClass = 'text-yellow-400 font-black text-xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]';
+                                bgClass = 'slot-full hover:bg-yellow-400/30';
+                            } else if (ratio >= 0.5) {
+                                // 中高標 (>= 50%)：才顯示主題色漸層背景
+                                const themeColorRGB = isNewRaid ? '0, 242, 255' : '236, 72, 153';
+                                
+                                // 💡 拉大漸層對比：把 50%~99% 的比例，強烈對應到 15%~80% 的透明度！
+                                const normalizedRatio = (ratio - 0.5) * 2; 
+                                const bgOpacity = 0.15 + (normalizedRatio * 0.65); 
+                                
+                                inlineStyle = `background-color: rgba(${themeColorRGB}, ${bgOpacity});`;
+                                bgClass = `hover:bg-white/10`; // 蓋掉預設的 bg-white/5
+                                
+                                if (ratio >= 0.65) {
+                                    textClass = 'text-yellow-400 font-bold text-lg';
+                                } else {
+                                    textClass = isNewRaid ? 'text-cyan-300 font-bold text-base' : 'text-pink-300 font-bold text-base';
+                                }
+                            } else {
+                                // 低標 (< 50%)：無漸層，維持預設白底
+                                textClass = 'text-white/80 font-medium';
+                            }
+                        }
 
                         if (isPublishedSlot) {
                             const pulseClass = isNewRaid ? 'published-pulse-new' : 'published-pulse-old';
                             bgClass = `z-20 relative ${pulseClass}`;
                             textClass = `text-white font-black text-xl md:text-2xl`;
+                            inlineStyle = ''; // 交給動畫處理
                         }
 
                         td.className = `p-3 md:p-4 border-b border-white/5 transition-all cursor-pointer select-none ${bgClass}`;
                         td.innerHTML = `<div class="${textClass} transition-colors">${count}</div>`;
+                        if (inlineStyle) {
+                            td.style.cssText = inlineStyle;
+                        }
                         td.onclick = () => window.openParticipantModal(dIdx, sIdx, available);
                     }
                     row.appendChild(td);
