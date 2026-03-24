@@ -337,6 +337,29 @@
             </div>
         </div>
 
+        <!-- Tab 4: Character Query (成員查詢) -->
+        <div id="tab-query" class="tab-pane hidden space-y-6">
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="text-2xl">🔍</span>
+                    <h3 class="text-xl md:text-2xl font-bold text-pink-300">成員戰力查詢</h3>
+                </div>
+                <p class="text-xs text-pink-100/60 mb-5">輸入成員暱稱，快速查詢戰力與機體指標。<br>(目前為高科技 UI 展示面板，待未來串接真實資料庫)</p>
+
+                <div class="flex items-center gap-2 bg-black/40 p-2.5 rounded-2xl border border-white/10 shadow-inner">
+                    <input type="text" id="queryCharInput" placeholder="輸入角色名稱 (例如: 凡妮紗)..." class="flex-1 bg-transparent border-none text-white px-3 py-2 outline-none text-sm tracking-wide" onkeydown="if(event.key === 'Enter') window.searchCharacter()">
+                    <button onclick="window.searchCharacter()" class="bg-blue-500 hover:bg-blue-400 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-[0_0_15px_rgba(59,130,246,0.3)] whitespace-nowrap">
+                        查詢
+                    </button>
+                </div>
+
+                <!-- 查詢結果區塊 -->
+                <div id="queryResultArea" class="mt-8 hidden">
+                    <!-- 內容由 JS 動態產生 -->
+                </div>
+            </div>
+        </div>
+
         <!-- 浮水印 Footer -->
         <div class="text-center text-[10px] text-white/30 mt-8 mb-8 pb-12 tracking-widest font-light pointer-events-none w-full">
             Crafted with 💖 by Vanessa Huang
@@ -348,6 +371,7 @@
         <div class="nav-item active" id="nav-signup" onclick="window.switchTab('signup', this)"><i data-lucide="edit-3" class="w-7 h-7"></i><span class="mt-1">報名</span></div>
         <div class="nav-item" id="nav-heatmap" onclick="window.switchTab('heatmap', this)"><i data-lucide="layout-grid" class="w-7 h-7"></i><span class="mt-1">報名總覽</span></div>
         <div class="nav-item" id="nav-mock" onclick="window.switchTab('mock', this)"><i data-lucide="users" class="w-7 h-7"></i><span class="mt-1">成員/模擬</span></div>
+        <div class="nav-item" id="nav-query" onclick="window.switchTab('query', this)"><i data-lucide="search" class="w-7 h-7"></i><span class="mt-1">成員查詢</span></div>
     </nav>
 
     <!-- Modals -->
@@ -1033,30 +1057,72 @@
                     if (parts.length >= 4) {
                         const dayIdx = parseInt(parts[2]); const slotIdx = parseInt(parts[3]);
                         const d = new Date(currentWedDate); d.setDate(d.getDate() + dayIdx);
-                        text += `${d.getMonth() + 1}/${d.getDate()} (週${['三','四','五','六','日','一','二'][dayIdx]}) ${['20:00','21:00','22:00','23:00'][slotIdx]}\n`;
+                        text += `**${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} (週${['三','四','五','六','日','一','二'][dayIdx]}) ${['20:00','21:00','22:00','23:00'][slotIdx]}**\n`;
                     }
                 }
                 const batches = Array.from(document.getElementById('modalBatchContainer').children);
                 const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
+                
+                let batchesText = [];
                 batches.forEach((b, idx) => {
                     const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1];
-                    const t1 = bin1 ? Array.from(bin1.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
-                    const t2 = bin2 ? Array.from(bin2.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
-                    if (t1 || t2) text += `第${idx + 1}梯次  1隊 ${t1}    二隊 ${t2}\n`;
+                    const nodes1 = bin1 ? Array.from(bin1.children) : [];
+                    const nodes2 = bin2 ? Array.from(bin2.children) : [];
+                    
+                    if (nodes1.length === 0 && nodes2.length === 0) return;
+
+                    let batchStr = `--- 第${idx + 1}梯次 ---\n`;
+                    const formatTeam = (nodes) => {
+                        let members = nodes.map(n => {
+                            const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤';
+                            return `${icon} ${n.dataset.name}(${abbrev(n.dataset.job)})`;
+                        });
+                        let missingCount = 4 - members.length;
+                        for (let i = 0; i < missingCount; i++) members.push('<缺人>');
+                        return members.join('\n');
+                    };
+
+                    batchStr += `1隊：\n${formatTeam(nodes1)}\n\n`;
+                    batchStr += `2隊：\n${formatTeam(nodes2)}`;
+                    batchesText.push(batchStr);
                 });
+                
+                if (batchesText.length > 0) text += batchesText.join('\n\n');
+                
                 const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); 
                 SysModal.alert("分隊文案已複製到剪貼簿！🚀", "複製成功");
             },
             copyMockToClipboard: () => {
-                let text = "模擬分隊結果\n";
+                let text = "**模擬分隊結果**\n";
                 const batches = Array.from(document.getElementById('mockBatchContainer').children);
                 const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
+                
+                let batchesText = [];
                 batches.forEach((b, idx) => {
                     const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1];
-                    const t1 = bin1 ? Array.from(bin1.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
-                    const t2 = bin2 ? Array.from(bin2.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
-                    if (t1 || t2) text += `第${idx + 1}梯次  1隊 ${t1}    二隊 ${t2}\n`;
+                    const nodes1 = bin1 ? Array.from(bin1.children) : [];
+                    const nodes2 = bin2 ? Array.from(bin2.children) : [];
+                    
+                    if (nodes1.length === 0 && nodes2.length === 0) return;
+
+                    let batchStr = `--- 第${idx + 1}梯次 ---\n`;
+                    const formatTeam = (nodes) => {
+                        let members = nodes.map(n => {
+                            const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤';
+                            return `${icon} ${n.dataset.name}(${abbrev(n.dataset.job)})`;
+                        });
+                        let missingCount = 4 - members.length;
+                        for (let i = 0; i < missingCount; i++) members.push('<缺人>');
+                        return members.join('\n');
+                    };
+
+                    batchStr += `1隊：\n${formatTeam(nodes1)}\n\n`;
+                    batchStr += `2隊：\n${formatTeam(nodes2)}`;
+                    batchesText.push(batchStr);
                 });
+                
+                if (batchesText.length > 0) text += batchesText.join('\n\n');
+
                 const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); 
                 SysModal.alert("模擬分隊文案已複製到剪貼簿！🚀", "複製成功");
             },
@@ -1082,6 +1148,67 @@
                 });
             },
             toggleCustomDropdown: (e) => { e.stopPropagation(); const list = document.getElementById('customDropdownList'); if(!list) return; Array.from(list.children).forEach(child => child.style.display = 'flex'); list.classList.toggle('hidden'); },
+            searchCharacter: async () => {
+                const nameInput = document.getElementById('queryCharInput');
+                const name = nameInput.value.trim();
+                if (!name) return await SysModal.alert("請先輸入要查詢的角色名稱喔！", "提示");
+
+                const resultArea = document.getElementById('queryResultArea');
+                resultArea.classList.remove('hidden');
+                resultArea.innerHTML = `<div class="text-center py-12 flex flex-col items-center justify-center"><i data-lucide="loader-2" class="w-8 h-8 text-pink-400 animate-spin mb-4"></i><p class="text-xs text-pink-200/60 tracking-widest">正在連結神聖之塔資料庫...</p></div>`;
+                if (window.lucide) window.lucide.createIcons();
+
+                // 模擬 API 延遲
+                setTimeout(() => {
+                    const member = allMembers.find(m => m.name === name);
+                    const job = member ? member.job : '❓ 未知職業';
+                    const jobIcon = job.split(' ')[0] || '👤';
+                    const jobName = job.split(' ')[1] || '冒險者';
+
+                    // 產生模擬數據
+                    const fakeScore = Math.floor(Math.random() * 3000) + 7000; // 7000~10000
+                    const fakeAtk = Math.floor(Math.random() * 50) + 100;
+                    const fakeDef = Math.floor(Math.random() * 50) + 150;
+
+                    resultArea.innerHTML = `
+                        <div class="bg-black/30 border border-white/10 rounded-2xl p-5 md:p-6 relative overflow-hidden shadow-xl transition-all duration-500">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.8)]"></div>
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/5 flex items-center justify-center text-3xl border border-white/10 shadow-inner">
+                                        ${jobIcon}
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <h4 class="text-xl md:text-2xl font-bold text-white tracking-wide">${name}</h4>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded text-pink-200 border border-white/5">${jobName}</span>
+                                            ${member ? `<span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-0.5 rounded border border-green-500/30 font-bold">✔️ 本團成員</span>` : `<span class="text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded border border-red-500/30">外來者</span>`}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-yellow-400/80 font-bold mb-1 tracking-wider">🏆 綜合戰力</div>
+                                    <div class="text-2xl md:text-4xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.6)]">${fakeScore}</div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 md:gap-4 mt-4 pt-5 border-t border-white/10">
+                                <div class="bg-white/5 rounded-xl p-4 flex flex-col items-center justify-center border border-white/5 shadow-sm hover:bg-white/10 transition">
+                                    <span class="text-[10px] opacity-60 mb-1.5 tracking-widest text-pink-100 uppercase">⚔️ 攻擊力指標</span>
+                                    <span class="text-2xl font-bold text-pink-300 drop-shadow-[0_0_5px_rgba(244,114,182,0.5)]">${fakeAtk}</span>
+                                </div>
+                                <div class="bg-white/5 rounded-xl p-4 flex flex-col items-center justify-center border border-white/5 shadow-sm hover:bg-white/10 transition">
+                                    <span class="text-[10px] opacity-60 mb-1.5 tracking-widest text-cyan-100 uppercase">🛡️ 防禦力指標</span>
+                                    <span class="text-2xl font-bold text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">${fakeDef}</span>
+                                </div>
+                            </div>
+                            <div class="mt-5 text-center">
+                                <span class="text-[9px] opacity-40 tracking-widest bg-black/40 px-3 py-1 rounded-full">⚠️ 此為系統展示面板，尚未串接官方真實 API</span>
+                            </div>
+                        </div>
+                    `;
+                }, 1200);
+            },
             openParticipantModal: async (day, slot, people) => {
                 try {
                     const modal = document.getElementById('participantModal'); const weekId = getWeekId(currentWedDate);
