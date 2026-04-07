@@ -299,6 +299,7 @@
         <div class="text-center text-[10px] text-white/30 mt-8 mb-8 pb-12 tracking-widest font-light pointer-events-none w-full">Crafted with 💖 by Vanessa Huang</div>
     </div>
 
+    <!-- Bottom Nav -->
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-signup" onclick="window.switchTab('signup', this)"><i data-lucide="edit-3" class="w-7 h-7"></i><span class="mt-1">報名</span></div>
         <div class="nav-item" id="nav-heatmap" onclick="window.switchTab('heatmap', this)"><i data-lucide="layout-grid" class="w-7 h-7"></i><span class="mt-1">報名總覽</span></div>
@@ -306,6 +307,7 @@
         <div class="nav-item" id="nav-query" onclick="window.switchTab('query', this)"><i data-lucide="search" class="w-7 h-7"></i><span class="mt-1">成員查詢</span></div>
     </nav>
 
+    <!-- Modals -->
     <div id="memberEditorModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-lg p-6 md:p-8 overflow-y-auto max-h-[85vh]">
             <div class="sticky top-0 z-[60] bg-[#1d0e33] pb-5 pt-6 md:pt-8 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-white/10 flex justify-between items-center shadow-md">
@@ -356,6 +358,7 @@
         </div>
     </div>
 
+    <!-- 查看開戰公告彈窗 -->
     <div id="publishedRaidModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 text-white">
         <div class="glass-card w-full max-w-2xl p-6 md:p-8 overflow-y-auto max-h-[90vh]">
             <div class="sticky top-0 z-[60] bg-[#1d0e33] pb-5 pt-6 md:pt-8 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-white/10 flex justify-between items-start gap-4 shadow-md">
@@ -471,8 +474,6 @@
         let playerJobPresets = {};
         let mockDragCounts = JSON.parse(localStorage.getItem('shasha_mock_drag_counts') || '{}');
         let heatmapFilterPlayer = null;
-        
-        // 💡 智慧跳轉標記：確保選取名字後只自動跳轉一次
         let hasAutoJumpedForCurrentNameSelection = false;
 
         const dayNames = ['三', '四', '五', '六', '日', '一', '二'];
@@ -764,6 +765,17 @@
                     modal.classList.remove('hidden'); if (window.lucide) window.lucide.createIcons();
                 } catch(e) { console.error(e); await SysModal.alert("讀取分隊資料失敗", "錯誤"); }
             },
+            submitRaidVotes: async () => {
+                const name = document.getElementById('playerName').value.trim(); 
+                if (!playerJobPresets[name]) return await SysModal.alert("請先從下拉選單選取正確的暱稱喔！", "提示");
+                if (!currentUser) return await SysModal.alert("系統尚未連線，請稍候", "錯誤");
+                try {
+                    const weekId = getWeekId(currentWedDate);
+                    const votes = Object.keys(mySelectedVotes).map(k => { const [d, s] = k.split('-').map(Number); return { day: d, slot: s, type: mySelectedVotes[k] }; });
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', `raid_votes_${currentRaid}_${weekId}`, name), { name, job: playerJobPresets[name], votes, fillMode: currentFillMode, raid: currentRaid, updatedAt: Date.now() });
+                    await SysModal.alert("已成功同步本週紀錄！💖", "報名成功");
+                } catch(e) { await SysModal.alert("同步失敗", "錯誤"); }
+            },
             allowDrop: (ev) => ev.preventDefault(),
             drag: (ev) => { if (!isEditMode && document.getElementById('tab-mock').classList.contains('hidden')) return; ev.dataTransfer.setData("text", ev.target.id); },
             drop: (ev) => { 
@@ -791,8 +803,6 @@
             const name = nameEl.value.trim(); const btn = document.getElementById('submitBtn');
             if (playerJobPresets[name]) {
                 document.getElementById('timeLock').classList.add('hidden');
-                
-                // 💡 智慧自動跳轉邏輯
                 const realThisWed = getRecentWednesday(new Date());
                 const isViewingThisWeek = currentWedDate.getTime() === realThisWed.getTime();
                 if (isViewingThisWeek && !hasAutoJumpedForCurrentNameSelection) {
@@ -805,7 +815,6 @@
                         return;
                     }
                 }
-
                 const rec = allVotes.find(v => v.name === name);
                 if (btn) btn.innerHTML = rec ? '<span class="text-xl">🔄</span> 更新報名紀錄' : '<span class="text-xl">✅</span> 提交報名紀錄';
                 mySelectedVotes = {}; 
@@ -846,7 +855,7 @@
         if (nameInputEl) {
             nameInputEl.addEventListener('click', (e) => { e.stopPropagation(); const list = document.getElementById('customDropdownList'); if(!list) return; Array.from(list.children).forEach(child => child.style.display = 'flex'); list.classList.remove('hidden'); });
             nameInputEl.addEventListener('input', (e) => {
-                hasAutoJumpedForCurrentNameSelection = false; // 💡 輸入名字改變時重置跳轉標記
+                hasAutoJumpedForCurrentNameSelection = false;
                 const val = e.target.value.trim().toLowerCase(); const list = document.getElementById('customDropdownList');
                 if(list) { list.classList.remove('hidden'); Array.from(list.children).forEach(child => { const childText = child.innerText.toLowerCase(); if (childText.includes(val)) child.style.display = 'flex'; else child.style.display = 'none'; }); }
                 const notice = document.getElementById('autoJobNotice'); const rawVal = e.target.value.trim();
