@@ -306,30 +306,73 @@
         <div class="nav-item" id="nav-query" onclick="window.switchTab('query', this)"><i data-lucide="search" class="w-7 h-7"></i><span class="mt-1">成員查詢</span></div>
     </nav>
 
-    <!-- Modals -->
+    <!-- ⚡ 成員名單管理 Modal ⚡ -->
     <div id="memberEditorModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 z-[110]">
-        <div class="glass-card w-full max-w-lg p-6 md:p-8 overflow-y-auto max-h-[85vh]">
-            <div class="sticky top-0 z-[60] bg-[#1d0e33] pb-5 pt-6 md:pt-8 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-white/10 flex justify-between items-center shadow-md">
-                <h3 class="text-xl font-bold text-blue-300">成員名單管理</h3>
+        <div class="glass-card w-full max-w-2xl p-6 md:p-8 overflow-y-auto max-h-[85vh]">
+            <div class="sticky top-0 z-[60] bg-[#1d0e33] pb-4 pt-6 md:pt-8 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-white/10 flex justify-between items-center shadow-md">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-xl font-bold text-blue-300">成員名單管理</h3>
+                    <button onclick="window.openMenuEditor()" class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-400/30 hover:bg-purple-500/40 transition flex items-center gap-1 shadow-sm">
+                        <i data-lucide="settings-2" class="w-3 h-3"></i> 編輯選單
+                    </button>
+                </div>
                 <button onclick="window.closeMemberEditor()" class="absolute top-5 right-5 md:top-7 md:right-7 text-white opacity-50 p-2 bg-white/5 rounded-full hover:bg-white/10 transition z-[70]">✕</button>
             </div>
+            
             <div class="mt-6 space-y-5">
-                <div class="flex flex-col sm:flex-row gap-3 bg-blue-500/10 p-4 rounded-2xl border border-blue-400/30">
-                    <input type="text" id="newMemberName" class="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-400 transition" placeholder="輸入新成員暱稱...">
-                    <select id="newMemberServer" class="bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-blue-400 transition sm:w-[90px]">
-                        <option value="巴卡">巴卡</option>
-                        <option value="盧德">盧德</option>
+                <!-- 💡 修正跑位：套用智慧彈性換行 Flex-wrap -->
+                <div class="flex flex-wrap gap-2 bg-blue-500/10 p-3 rounded-xl border border-blue-400/30 items-center">
+                    <input type="text" id="newMemberName" class="flex-[2] min-w-[80px] bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-400 transition" placeholder="輸入新成員暱稱...">
+                    <select id="newMemberServer" class="flex-[1] min-w-[60px] bg-black/50 border border-white/10 rounded-lg px-2 py-2 text-sm text-white outline-none focus:border-blue-400 transition">
+                        <!-- 動態生成 -->
                     </select>
-                    <select id="newMemberJob" class="bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-blue-400 transition sm:w-[120px]">
-                        <option value="🛡️ 守護星">🛡️ 守護星</option><option value="⚔️ 劍星">⚔️ 劍星</option><option value="🗡️ 殺星">🗡️ 殺星</option><option value="🏹 弓星">🏹 弓星</option><option value="🪄 魔道星">🪄 魔道星</option><option value="👻 精靈星">👻 精靈星</option><option value="🍼 治癒星">🍼 治癒星</option><option value="✨ 護法星">✨ 護法星</option>
+                    <select id="newMemberJob" class="flex-[1.5] min-w-[90px] bg-black/50 border border-white/10 rounded-lg px-2 py-2 text-sm text-white outline-none focus:border-blue-400 transition">
+                        <!-- 動態生成 -->
                     </select>
-                    <button onclick="window.addNewMember()" class="text-sm text-blue-900 bg-blue-300 px-5 py-2.5 rounded-xl font-bold hover:bg-blue-400 transition shadow-[0_0_15px_rgba(147,197,253,0.3)] whitespace-nowrap">新增</button>
+                    <button onclick="window.addNewMember()" class="w-full sm:w-auto text-sm text-blue-900 bg-blue-300 px-4 py-2 rounded-lg font-bold hover:bg-blue-400 transition shadow-[0_0_15px_rgba(147,197,253,0.3)] mt-1 sm:mt-0 whitespace-nowrap">新增</button>
                 </div>
+                
                 <div id="memberEditorList" class="space-y-3 mt-5"></div>
             </div>
         </div>
     </div>
 
+    <!-- ⚙️ 編輯選項選單 Modal ⚙️ -->
+    <div id="menuEditorModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 z-[120]">
+        <div class="glass-card w-full max-w-sm p-6 text-white relative shadow-2xl border border-purple-400/30">
+            <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
+                <h3 class="text-lg font-bold text-purple-300 flex items-center gap-2">
+                    <i data-lucide="settings-2" class="w-5 h-5"></i> 編輯下拉選單
+                </h3>
+                <button onclick="window.closeMenuEditor()" class="text-white opacity-50 hover:opacity-100 transition">✕</button>
+            </div>
+            <div class="space-y-5 max-h-[60vh] overflow-y-auto pr-2">
+                <!-- 伺服器編輯 -->
+                <div>
+                    <label class="text-xs font-bold opacity-60 text-purple-200 block mb-2">伺服器列表</label>
+                    <div id="serverOptsList" class="space-y-1.5 mb-3"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="newServerInput" placeholder="輸入新伺服器..." class="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-purple-400 transition">
+                        <button onclick="window.addServerOpt()" class="bg-purple-500/30 text-purple-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-purple-500/50 transition whitespace-nowrap">加入</button>
+                    </div>
+                </div>
+                <!-- 職業編輯 -->
+                <div>
+                    <label class="text-xs font-bold opacity-60 text-purple-200 block mb-2">職業列表</label>
+                    <div id="jobOptsList" class="space-y-1.5 mb-3"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="newJobInput" placeholder="輸入新職業 (含圖示)..." class="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-purple-400 transition">
+                        <button onclick="window.addJobOpt()" class="bg-purple-500/30 text-purple-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-purple-500/50 transition whitespace-nowrap">加入</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 text-center">
+                <span class="text-[9px] opacity-40 text-pink-200 tracking-wider">任何新增/刪除都會即時同步給所有人</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 參戰名單 Modal -->
     <div id="participantModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4 text-white z-[100]">
         <div class="glass-card w-full max-w-4xl p-6 md:p-8 overflow-y-auto max-h-[90vh]">
             <div class="sticky top-0 z-[60] bg-[#1d0e33] pb-5 pt-6 md:pt-8 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 border-b border-white/10 flex flex-col md:flex-row md:justify-between items-start gap-4 shadow-md">
@@ -376,6 +419,7 @@
         </div>
     </div>
 
+    <!-- 系統專屬對話框 -->
     <div id="sysModal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-sm p-8 text-center text-white relative border border-pink-400/30 shadow-2xl">
             <h3 id="sysModalTitle" class="text-xl font-bold mb-4 text-pink-300 tracking-wider">提示</h3>
@@ -390,6 +434,7 @@
         </div>
     </div>
 
+    <!-- PWA 教學 -->
     <div id="pwaTutorialModal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-md p-8 space-y-5 text-white relative border border-pink-400/30 shadow-2xl">
             <button onclick="window.closePwaTutorial()" class="absolute top-5 right-5 text-white opacity-50 hover:opacity-100 transition p-2">✕</button>
@@ -461,6 +506,10 @@
         const db = getFirestore(app);
         const appId = 'shasha-aion2-raid';
         
+        // 💡 預設的職業與伺服器名單，將會與 Firebase 同步
+        let availableJobs = ['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星'];
+        let availableServers = ['巴卡', '盧德'];
+
         let currentUser = null;
         let currentWedDate = null;
         let allVotes = [];
@@ -598,8 +647,8 @@
 
         function renderPlayerList() {
             const list = document.getElementById('playerList'); const unList = document.getElementById('unfilledPlayerList'); const headerEl = document.getElementById('playerListHeader'); if (!list || !unList) return; list.innerHTML = ''; unList.innerHTML = '';
-            const isNewRaid = currentRaid === 'new'; const jobOrder = ['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星'];
-            const sortFn = (a, b) => { const jA = jobOrder.indexOf(a.job) !== -1 ? jobOrder.indexOf(a.job) : 99; const jB = jobOrder.indexOf(b.job) !== -1 ? jobOrder.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); };
+            const isNewRaid = currentRaid === 'new'; 
+            const sortFn = (a, b) => { const jA = availableJobs.indexOf(a.job) !== -1 ? availableJobs.indexOf(a.job) : 99; const jB = availableJobs.indexOf(b.job) !== -1 ? availableJobs.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); };
             let activeVotes = []; let deletedVotes = [];
             allVotes.forEach(p => { if (!allMembers.some(m => m.name === p.name)) deletedVotes.push(p); else activeVotes.push(p); });
             activeVotes.sort(sortFn); deletedVotes.sort(sortFn);
@@ -675,26 +724,84 @@
                 }
                 if (window.lucide) window.lucide.createIcons();
             },
+
+            // ✨ 編輯選項選單邏輯
+            openMenuEditor: () => {
+                window.renderMenuOpts();
+                document.getElementById('menuEditorModal').classList.remove('hidden');
+                if (window.lucide) window.lucide.createIcons();
+            },
+            closeMenuEditor: () => {
+                document.getElementById('menuEditorModal').classList.add('hidden');
+            },
+            renderMenuOpts: () => {
+                const sList = document.getElementById('serverOptsList');
+                const jList = document.getElementById('jobOptsList');
+                sList.innerHTML = availableServers.map((s, idx) => `<div class="flex justify-between items-center bg-black/30 p-2 rounded-lg border border-white/5"><span class="text-xs">${s}</span><button onclick="window.removeServerOpt(${idx})" class="text-red-400 text-xs px-2 hover:bg-red-400/20 rounded transition">✕</button></div>`).join('');
+                jList.innerHTML = availableJobs.map((j, idx) => `<div class="flex justify-between items-center bg-black/30 p-2 rounded-lg border border-white/5"><span class="text-xs">${j}</span><button onclick="window.removeJobOpt(${idx})" class="text-red-400 text-xs px-2 hover:bg-red-400/20 rounded transition">✕</button></div>`).join('');
+            },
+            addServerOpt: async () => {
+                const val = document.getElementById('newServerInput').value.trim();
+                if(!val) return;
+                availableServers.push(val);
+                document.getElementById('newServerInput').value = '';
+                await window.saveMenuOpts();
+            },
+            removeServerOpt: async (idx) => {
+                const res = await SysModal.confirm(`確定要刪除「${availableServers[idx]}」嗎？`, "警告");
+                if(res) { availableServers.splice(idx, 1); await window.saveMenuOpts(); }
+            },
+            addJobOpt: async () => {
+                const val = document.getElementById('newJobInput').value.trim();
+                if(!val) return;
+                availableJobs.push(val);
+                document.getElementById('newJobInput').value = '';
+                await window.saveMenuOpts();
+            },
+            removeJobOpt: async (idx) => {
+                const res = await SysModal.confirm(`確定要刪除「${availableJobs[idx]}」嗎？`, "警告");
+                if(res) { availableJobs.splice(idx, 1); await window.saveMenuOpts(); }
+            },
+            saveMenuOpts: async () => {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'dropdowns'), {
+                        servers: availableServers,
+                        jobs: availableJobs
+                    });
+                    window.renderMenuOpts();
+                    if(!document.getElementById('memberEditorModal').classList.contains('hidden')) {
+                        window.updateNewMemberDropdowns();
+                        window.refreshMemberEditorList();
+                    }
+                } catch (e) { console.error(e); }
+            },
+            updateNewMemberDropdowns: () => {
+                const jobSel = document.getElementById('newMemberJob');
+                const srvSel = document.getElementById('newMemberServer');
+                if(jobSel) jobSel.innerHTML = availableJobs.map(j => `<option value="${j}">${j}</option>`).join('');
+                if(srvSel) srvSel.innerHTML = availableServers.map(s => `<option value="${s}">${s}</option>`).join('');
+            },
             
             refreshMemberEditorList: () => {
                 const list = document.getElementById('memberEditorList'); if (!list) return; list.innerHTML = '';
-                const jobOrder = ['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星'];
-                const sortedMembers = [...allMembers].sort((a, b) => { const jA = jobOrder.indexOf(a.job) !== -1 ? jobOrder.indexOf(a.job) : 99; const jB = jobOrder.indexOf(b.job) !== -1 ? jobOrder.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); });
+                const sortFn = (a, b) => { const jA = availableJobs.indexOf(a.job) !== -1 ? availableJobs.indexOf(a.job) : 99; const jB = availableJobs.indexOf(b.job) !== -1 ? availableJobs.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); };
+                const sortedMembers = [...allMembers].sort(sortFn);
                 sortedMembers.forEach(m => {
                     const serverOpt = m.server || '巴卡';
-                    const row = document.createElement('div'); row.className = "flex flex-col sm:flex-row gap-3 bg-white/5 p-3 rounded-xl mb-2 text-white shadow-sm";
+                    const row = document.createElement('div'); 
+                    // 💡 完美的 Flex-wrap 響應式排版
+                    row.className = "flex flex-wrap sm:flex-nowrap items-center gap-2 bg-white/5 p-2 md:p-3 rounded-xl mb-2 text-white shadow-sm";
                     row.innerHTML = `
-                        <input type="text" value="${m.name}" class="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 transition w-full sm:w-auto">
-                        <select class="server-select flex-1 sm:flex-none bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-sm outline-none sm:w-[80px] focus:border-blue-400 transition">
-                            <option value="巴卡" ${serverOpt==='巴卡'?'selected':''}>巴卡</option>
-                            <option value="盧德" ${serverOpt==='盧德'?'selected':''}>盧德</option>
+                        <input type="text" value="${m.name}" class="flex-[2] min-w-[100px] bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-blue-400 transition">
+                        <select class="server-select flex-[1] min-w-[60px] bg-black/40 border border-white/10 rounded-lg px-1 py-1.5 text-sm outline-none focus:border-blue-400 transition w-auto">
+                            ${availableServers.map(s => `<option value="${s}" ${serverOpt===s?'selected':''}>${s}</option>`).join('')}
                         </select>
-                        <select class="job-select flex-1 sm:flex-none bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-sm outline-none sm:w-[110px] focus:border-blue-400 transition">
-                            ${['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星'].map(j => `<option value="${j}" ${m.job===j?'selected':''}>${j}</option>`).join('')}
+                        <select class="job-select flex-[1.5] min-w-[90px] bg-black/40 border border-white/10 rounded-lg px-1 py-1.5 text-sm outline-none focus:border-blue-400 transition w-auto">
+                            ${availableJobs.map(j => `<option value="${j}" ${m.job===j?'selected':''}>${j}</option>`).join('')}
                         </select>
-                        <div class="flex gap-2 justify-end w-full sm:w-auto">
-                            <button class="text-xs text-green-400 bg-green-400/10 px-3 py-2 rounded-lg hover:bg-green-400/20 transition font-bold whitespace-nowrap" onclick="window.updateMember('${m.name}', this.parentElement.parentElement)">更新</button>
-                            <button class="text-xs text-red-400 bg-red-400/10 px-3 py-2 rounded-lg hover:bg-red-400/20 transition font-bold whitespace-nowrap" onclick="window.deleteMember('${m.name}')">刪除</button>
+                        <div class="flex gap-1.5 justify-end w-full sm:w-auto shrink-0 mt-2 sm:mt-0">
+                            <button class="text-xs text-green-400 bg-green-400/10 px-3 py-1.5 rounded-lg hover:bg-green-400/20 transition font-bold whitespace-nowrap" onclick="window.updateMember('${m.name}', this.parentElement.parentElement)">更新</button>
+                            <button class="text-xs text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg hover:bg-red-400/20 transition font-bold whitespace-nowrap" onclick="window.deleteMember('${m.name}')">刪除</button>
                         </div>`;
                     list.appendChild(row);
                 });
@@ -754,7 +861,8 @@
                 const batches = Array.from(document.getElementById('modalBatchContainer').children); 
                 let batchesText = []; batches.forEach((b, idx) => {
                     const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1]; const nodes1 = bin1 ? Array.from(bin1.children) : []; const nodes2 = bin2 ? Array.from(bin2.children) : []; if (nodes1.length === 0 && nodes2.length === 0) return;
-                    let batchStr = `--- 第${idx + 1}梯次 ---\n`; const formatTeam = (nodes) => { let members = nodes.map(n => { const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; const srv = n.dataset.server || '巴卡'; return `${icon} ${n.dataset.name}[${srv}]`; }); let missingCount = 4 - members.length; for (let i = 0; i < missingCount; i++) members.push('<缺人>'); return members.join('\n'); };
+                    let batchStr = `--- 第${idx + 1}梯次 ---\n`; 
+                    const formatTeam = (nodes) => { let members = nodes.map(n => { const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; const srv = n.dataset.server || '巴卡'; return `${icon} ${n.dataset.name}[${srv}]`; }); let missingCount = 4 - members.length; for (let i = 0; i < missingCount; i++) members.push('<缺人>'); return members.join('\n'); };
                     batchStr += `1隊：\n${formatTeam(nodes1)}\n\n`; batchStr += `2隊：\n${formatTeam(nodes2)}`; batchesText.push(batchStr);
                 });
                 if (batchesText.length > 0) text += batchesText.join('\n\n'); const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); SysModal.alert("分隊文案已複製到剪貼簿！🚀", "複製成功");
@@ -764,7 +872,8 @@
                 let text = "**模擬分隊結果**\n"; const batches = Array.from(document.getElementById('mockBatchContainer').children);
                 let batchesText = []; batches.forEach((b, idx) => {
                     const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1]; const nodes1 = bin1 ? Array.from(bin1.children) : []; const nodes2 = bin2 ? Array.from(bin2.children) : []; if (nodes1.length === 0 && nodes2.length === 0) return;
-                    let batchStr = `--- 第${idx + 1}梯次 ---\n`; const formatTeam = (nodes) => { let members = nodes.map(n => { const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; const srv = n.dataset.server || '巴卡'; return `${icon} ${n.dataset.name}[${srv}]`; }); let missingCount = 4 - members.length; for (let i = 0; i < missingCount; i++) members.push('<缺人>'); return members.join('\n'); };
+                    let batchStr = `--- 第${idx + 1}梯次 ---\n`; 
+                    const formatTeam = (nodes) => { let members = nodes.map(n => { const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; const srv = n.dataset.server || '巴卡'; return `${icon} ${n.dataset.name}[${srv}]`; }); let missingCount = 4 - members.length; for (let i = 0; i < missingCount; i++) members.push('<缺人>'); return members.join('\n'); };
                     batchStr += `1隊：\n${formatTeam(nodes1)}\n\n`; batchStr += `2隊：\n${formatTeam(nodes2)}`; batchesText.push(batchStr);
                 });
                 if (batchesText.length > 0) text += batchesText.join('\n\n'); const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); SysModal.alert("模擬分隊文案已複製到剪貼簿！🚀", "複製成功");
@@ -780,8 +889,8 @@
             
             populateCustomDropdown: () => {
                 const list = document.getElementById('customDropdownList'); if (!list || !allMembers) return; list.innerHTML = '';
-                const jobOrder = ['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星'];
-                const sortedMembers = [...allMembers].sort((a, b) => { const jA = jobOrder.indexOf(a.job) !== -1 ? jobOrder.indexOf(a.job) : 99; const jB = jobOrder.indexOf(b.job) !== -1 ? jobOrder.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); });
+                const sortFn = (a, b) => { const jA = availableJobs.indexOf(a.job) !== -1 ? availableJobs.indexOf(a.job) : 99; const jB = availableJobs.indexOf(b.job) !== -1 ? availableJobs.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); };
+                const sortedMembers = [...allMembers].sort(sortFn);
                 sortedMembers.forEach(m => { const div = document.createElement('div'); div.className = 'px-5 py-4 hover:bg-pink-500/30 cursor-pointer text-white text-base border-b border-white/5 transition flex items-center justify-start gap-3'; const icon = m.job ? m.job.split(' ')[0] : '👤'; div.innerHTML = `<span class="opacity-80 text-sm">${icon}</span><span class="font-bold tracking-wide">${m.name}</span>`; div.onclick = (e) => { e.stopPropagation(); const input = document.getElementById('playerName'); input.value = m.name; input.dispatchEvent(new Event('input')); list.classList.add('hidden'); }; list.appendChild(div); });
             },
             
@@ -806,7 +915,7 @@
                     const saveBtn = document.getElementById('modalSaveBtn'); if (saveBtn) { saveBtn.innerHTML = "儲存草稿"; if (saveBtn.classList.contains('bg-green-500')) { saveBtn.classList.replace('bg-green-500', 'bg-blue-500'); } }
                     const ref = doc(db, 'artifacts', appId, 'public', 'data', 'raid_layouts', currentActiveSlot); const snap = await getDoc(ref); const layoutDoc = snap.exists() ? snap.data() : null;
                     modalBatchCount = layoutDoc?.batches?.length || 2; const list = document.getElementById('modalParticipantList'); list.innerHTML = ''; const isInBatch = (name) => layoutDoc?.batches?.some(b => b.t1.some(m => m.name === name) || b.t2.some(m => m.name === name));
-                    const jobOrder = ['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星']; const sortFn = (a, b) => { const jA = jobOrder.indexOf(a.job) !== -1 ? jobOrder.indexOf(a.job) : 99; const jB = jobOrder.indexOf(b.job) !== -1 ? jobOrder.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); };
+                    const sortFn = (a, b) => { const jA = availableJobs.indexOf(a.job) !== -1 ? availableJobs.indexOf(a.job) : 99; const jB = availableJobs.indexOf(b.job) !== -1 ? availableJobs.indexOf(b.job) : 99; if (jA !== jB) return jA - jB; return a.name.localeCompare(b.name, 'zh-TW'); };
                     let activeP = []; let deletedP = []; 
                     people.forEach(p => { 
                         const realMember = allMembers.find(m => m.name === p.name);
@@ -835,7 +944,8 @@
 
             renderMockLab: () => {
                 const pool = document.getElementById('mockMemberPool'); if (!pool) return; pool.innerHTML = '';
-                const sortedMembers = [...allMembers].sort((a, b) => { const countA = mockDragCounts[a.name] || 0; const countB = mockDragCounts[b.name] || 0; return countB - countA; });
+                const sortFn = (a, b) => { const countA = mockDragCounts[a.name] || 0; const countB = mockDragCounts[b.name] || 0; return countB - countA; };
+                const sortedMembers = [...allMembers].sort(sortFn);
                 sortedMembers.forEach((m, idx) => {
                     const id = `pool-m-${idx}`; const icon = m.job ? m.job.split(' ')[0] : '👤';
                     const srv = m.server || '巴卡';
@@ -912,6 +1022,23 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         currentUser = user; startSyncVotes();
+                        // ✨ 啟動時先讀取下拉選單設定
+                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'dropdowns'), (docSnap) => {
+                            if (docSnap.exists()) {
+                                const data = docSnap.data();
+                                if (data.jobs && data.jobs.length > 0) availableJobs = data.jobs;
+                                if (data.servers && data.servers.length > 0) availableServers = data.servers;
+                            } else {
+                                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'dropdowns'), {
+                                    jobs: availableJobs, servers: availableServers
+                                });
+                            }
+                            window.updateNewMemberDropdowns();
+                            if (!document.getElementById('memberEditorModal').classList.contains('hidden')) {
+                                window.refreshMemberEditorList();
+                            }
+                        });
+
                         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'raid_members'), (snap) => {
                             allMembers = snap.docs.map(d => d.data());
                             if (allMembers.length === 0) {
