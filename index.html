@@ -320,7 +320,6 @@
             </div>
             
             <div class="mt-6 space-y-5">
-                <!-- 💡 修正跑位：套用智慧彈性換行 Flex-wrap -->
                 <div class="flex flex-wrap gap-2 bg-blue-500/10 p-3 rounded-xl border border-blue-400/30 items-center">
                     <input type="text" id="newMemberName" class="flex-[2] min-w-[80px] bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-400 transition" placeholder="輸入新成員暱稱...">
                     <select id="newMemberServer" class="flex-[1] min-w-[60px] bg-black/50 border border-white/10 rounded-lg px-2 py-2 text-sm text-white outline-none focus:border-blue-400 transition">
@@ -347,7 +346,6 @@
                 <button onclick="window.closeMenuEditor()" class="text-white opacity-50 hover:opacity-100 transition">✕</button>
             </div>
             <div class="space-y-5 max-h-[60vh] overflow-y-auto pr-2">
-                <!-- 伺服器編輯 -->
                 <div>
                     <label class="text-xs font-bold opacity-60 text-purple-200 block mb-2">伺服器列表</label>
                     <div id="serverOptsList" class="space-y-1.5 mb-3"></div>
@@ -356,7 +354,6 @@
                         <button onclick="window.addServerOpt()" class="bg-purple-500/30 text-purple-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-purple-500/50 transition whitespace-nowrap">加入</button>
                     </div>
                 </div>
-                <!-- 職業編輯 -->
                 <div>
                     <label class="text-xs font-bold opacity-60 text-purple-200 block mb-2">職業列表</label>
                     <div id="jobOptsList" class="space-y-1.5 mb-3"></div>
@@ -419,7 +416,6 @@
         </div>
     </div>
 
-    <!-- 系統專屬對話框 -->
     <div id="sysModal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-sm p-8 text-center text-white relative border border-pink-400/30 shadow-2xl">
             <h3 id="sysModalTitle" class="text-xl font-bold mb-4 text-pink-300 tracking-wider">提示</h3>
@@ -434,7 +430,6 @@
         </div>
     </div>
 
-    <!-- PWA 教學 -->
     <div id="pwaTutorialModal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-md p-8 space-y-5 text-white relative border border-pink-400/30 shadow-2xl">
             <button onclick="window.closePwaTutorial()" class="absolute top-5 right-5 text-white opacity-50 hover:opacity-100 transition p-2">✕</button>
@@ -506,7 +501,6 @@
         const db = getFirestore(app);
         const appId = 'shasha-aion2-raid';
         
-        // 💡 預設的職業與伺服器名單，將會與 Firebase 同步
         let availableJobs = ['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星'];
         let availableServers = ['巴卡', '盧德'];
 
@@ -847,8 +841,21 @@
             openPublishedRaidModal: () => {
                 if(!currentPublishedRaidData) return; const modal = document.getElementById('publishedRaidModal'); const title = document.getElementById('pubModalTitle'); const container = document.getElementById('pubModalBatches'); const footer = document.getElementById('pubModalFooter'); title.innerHTML = `<span>⚔️</span> 開打時間：${currentPublishedRaidData.slotText}`; container.innerHTML = '';
                 currentPublishedRaidData.batches.forEach((b, idx) => {
-                    const t1Html = b.t1.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; const srv = m.server || '巴卡'; return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">[${srv}]</span></span>`; }).join('');
-                    const t2Html = b.t2.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; const srv = m.server || '巴卡'; return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">[${srv}]</span></span>`; }).join('');
+                    // ✨ 動態回資料庫抓最新資料：就算照片是舊的，顯示時也會是最新狀態！
+                    const t1Html = b.t1.map(m => { 
+                        const realMember = allMembers.find(mem => mem.name === m.name);
+                        const srvToUse = realMember ? (realMember.server || '巴卡') : (m.server || '巴卡');
+                        const jobToUse = realMember ? realMember.job : m.job;
+                        const icon = jobToUse ? jobToUse.split(' ')[0] : '👤'; 
+                        return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">[${srvToUse}]</span></span>`; 
+                    }).join('');
+                    const t2Html = b.t2.map(m => { 
+                        const realMember = allMembers.find(mem => mem.name === m.name);
+                        const srvToUse = realMember ? (realMember.server || '巴卡') : (m.server || '巴卡');
+                        const jobToUse = realMember ? realMember.job : m.job;
+                        const icon = jobToUse ? jobToUse.split(' ')[0] : '👤'; 
+                        return `<span class="inline-flex items-center bg-white/10 px-2.5 py-1.5 rounded-lg text-xs m-1 whitespace-nowrap shadow-sm"><span class="mr-1">${icon}</span><span class="font-bold tracking-wide">${m.name}</span><span class="opacity-50 ml-1.5 text-[9px] tracking-wider uppercase">[${srvToUse}]</span></span>`; 
+                    }).join('');
                     container.innerHTML += `<div class="bg-black/30 p-5 rounded-2xl border border-white/5 shadow-inner"><div class="text-sm font-bold text-pink-300 mb-4 text-center border-b border-white/5 pb-3 tracking-widest">第 ${idx + 1} 梯次</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div class="bg-white/5 rounded-xl p-3"><div class="text-[10px] opacity-60 mb-2.5 text-center text-pink-100 font-bold tracking-widest uppercase">1 隊</div><div class="min-h-[50px] flex flex-wrap content-start justify-center sm:justify-start">${t1Html}</div></div><div class="bg-white/5 rounded-xl p-3"><div class="text-[10px] opacity-60 mb-2.5 text-center text-pink-100 font-bold tracking-widest uppercase">2 隊</div><div class="min-h-[50px] flex flex-wrap content-start justify-center sm:justify-start">${t2Html}</div></div></div></div>`;
                 });
                 const d = new Date(currentPublishedRaidData.updatedAt); footer.innerText = `發布者: ${currentPublishedRaidData.publisher} (${d.toLocaleString()})`; modal.classList.remove('hidden');
@@ -862,7 +869,17 @@
                 let batchesText = []; batches.forEach((b, idx) => {
                     const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1]; const nodes1 = bin1 ? Array.from(bin1.children) : []; const nodes2 = bin2 ? Array.from(bin2.children) : []; if (nodes1.length === 0 && nodes2.length === 0) return;
                     let batchStr = `--- 第${idx + 1}梯次 ---\n`; 
-                    const formatTeam = (nodes) => { let members = nodes.map(n => { const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; const srv = n.dataset.server || '巴卡'; return `${icon} ${n.dataset.name}[${srv}]`; }); let missingCount = 4 - members.length; for (let i = 0; i < missingCount; i++) members.push('<缺人>'); return members.join('\n'); };
+                    const formatTeam = (nodes) => { 
+                        let members = nodes.map(n => { 
+                            const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; 
+                            // ✨ 複製時也吃 DOM 上被更新過的最新的 server 屬性！
+                            const srv = n.dataset.server || '巴卡'; 
+                            return `${icon} ${n.dataset.name}[${srv}]`; 
+                        }); 
+                        let missingCount = 4 - members.length; 
+                        for (let i = 0; i < missingCount; i++) members.push('<缺人>'); 
+                        return members.join('\n'); 
+                    };
                     batchStr += `1隊：\n${formatTeam(nodes1)}\n\n`; batchStr += `2隊：\n${formatTeam(nodes2)}`; batchesText.push(batchStr);
                 });
                 if (batchesText.length > 0) text += batchesText.join('\n\n'); const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); SysModal.alert("分隊文案已複製到剪貼簿！🚀", "複製成功");
@@ -873,7 +890,16 @@
                 let batchesText = []; batches.forEach((b, idx) => {
                     const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1]; const nodes1 = bin1 ? Array.from(bin1.children) : []; const nodes2 = bin2 ? Array.from(bin2.children) : []; if (nodes1.length === 0 && nodes2.length === 0) return;
                     let batchStr = `--- 第${idx + 1}梯次 ---\n`; 
-                    const formatTeam = (nodes) => { let members = nodes.map(n => { const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; const srv = n.dataset.server || '巴卡'; return `${icon} ${n.dataset.name}[${srv}]`; }); let missingCount = 4 - members.length; for (let i = 0; i < missingCount; i++) members.push('<缺人>'); return members.join('\n'); };
+                    const formatTeam = (nodes) => { 
+                        let members = nodes.map(n => { 
+                            const icon = n.dataset.job ? n.dataset.job.split(' ')[0] : '👤'; 
+                            const srv = n.dataset.server || '巴卡'; 
+                            return `${icon} ${n.dataset.name}[${srv}]`; 
+                        }); 
+                        let missingCount = 4 - members.length; 
+                        for (let i = 0; i < missingCount; i++) members.push('<缺人>'); 
+                        return members.join('\n'); 
+                    };
                     batchStr += `1隊：\n${formatTeam(nodes1)}\n\n`; batchStr += `2隊：\n${formatTeam(nodes2)}`; batchesText.push(batchStr);
                 });
                 if (batchesText.length > 0) text += batchesText.join('\n\n'); const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); SysModal.alert("模擬分隊文案已複製到剪貼簿！🚀", "複製成功");
@@ -925,7 +951,25 @@
                     activeP.sort(sortFn); deletedP.sort(sortFn); const sortedPeople = [...activeP, ...deletedP];
                     sortedPeople.forEach((p, idx) => { if (!isInBatch(p.name)) list.appendChild(createMemberNode(p, `p-${idx}`)); });
                     const container = document.getElementById('modalBatchContainer'); container.innerHTML = ''; for (let i = 0; i < modalBatchCount; i++) container.innerHTML += createBatchHtml(i, `modal-team-${i}`);
-                    if (layoutDoc && layoutDoc.batches) { layoutDoc.batches.forEach((b, bIdx) => { b.t1.forEach((m, mIdx) => { const target = document.getElementById(`modal-team-${bIdx}-1`); if (target) target.appendChild(createMemberNode(m, `pm1-${bIdx}-${mIdx}`)); }); b.t2.forEach((m, mIdx) => { const target = document.getElementById(`modal-team-${bIdx}-2`); if (target) target.appendChild(createMemberNode(m, `pm2-${bIdx}-${mIdx}`)); }); }); const d = new Date(layoutDoc.updatedAt); document.getElementById('lastEditInfo').innerText = `上次編輯: ${layoutDoc.lastEditor} (${d.toLocaleString()})`; } else { document.getElementById('lastEditInfo').innerText = ""; }
+                    if (layoutDoc && layoutDoc.batches) { 
+                        layoutDoc.batches.forEach((b, bIdx) => { 
+                            b.t1.forEach((m, mIdx) => { 
+                                // ✨ 即使讀取舊的儲存草稿，也動態賦予最新的伺服器標籤給它！
+                                const realMember = allMembers.find(mem => mem.name === m.name);
+                                if (realMember) { m.server = realMember.server; m.job = realMember.job; }
+                                const target = document.getElementById(`modal-team-${bIdx}-1`); 
+                                if (target) target.appendChild(createMemberNode(m, `pm1-${bIdx}-${mIdx}`)); 
+                            }); 
+                            b.t2.forEach((m, mIdx) => { 
+                                // ✨ 即使讀取舊的儲存草稿，也動態賦予最新的伺服器標籤給它！
+                                const realMember = allMembers.find(mem => mem.name === m.name);
+                                if (realMember) { m.server = realMember.server; m.job = realMember.job; }
+                                const target = document.getElementById(`modal-team-${bIdx}-2`); 
+                                if (target) target.appendChild(createMemberNode(m, `pm2-${bIdx}-${mIdx}`)); 
+                            }); 
+                        }); 
+                        const d = new Date(layoutDoc.updatedAt); document.getElementById('lastEditInfo').innerText = `上次編輯: ${layoutDoc.lastEditor} (${d.toLocaleString()})`; 
+                    } else { document.getElementById('lastEditInfo').innerText = ""; }
                     modal.classList.remove('hidden'); if (window.lucide) window.lucide.createIcons();
                 } catch(e) { console.error(e); await SysModal.alert("讀取分隊資料失敗", "錯誤"); }
             },
